@@ -9,6 +9,7 @@
 - [CMake 3.16 or later](http://www.cmake.org/)
 - (Optional) [vcpgk](https://vcpkg.io/en/index.html) (for automating install of SDL2/SDL2_mixer dependencies, should work on all supported platforms)
 - GL libraries and headers are required for OpenGL support.
+- OpenCV library for extracting PCX images in SPEC files using abuse-tool
 
 #### Directory Structure
 

@@ -93,12 +93,17 @@ if(OPENGL_FOUND)
     target_link_libraries(abuse ${OPENGL_LIBRARIES})
 endif(OPENGL_FOUND)
 
+
 if(APPLE)
     # Link CoreFoundation
     target_link_libraries(abuse "-framework CoreFoundation")
 endif()
 
-add_executable(abuse-tool tool/abuse-tool.cpp crc.cpp crc.h)
+add_executable(abuse-tool
+	tool/abuse-tool.cpp
+	crc.cpp crc.h
+	tool/AR_SPEC.cpp tool/AR_SPEC.h
+	tool/AR_Help.cpp tool/AR_Help.h)
 
 target_link_libraries(abuse-tool imlib)
 
