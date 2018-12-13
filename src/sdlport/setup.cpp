@@ -544,6 +544,179 @@ void showHelp(const char* executableName)
 }
 
 //
+// Create a default 'abuserc' file
+//
+void createRCFile( char *rcfile )
+{
+    FILE *fd = NULL;
+
+    if( (fd = fopen( rcfile, "w" )) != NULL )
+    {
+        fputs( "; Abuse-SDL Configuration file\n\n", fd );
+        fputs( "; Startup fullscreen\nfullscreen=1\n\n", fd );
+        fputs( "; Force software renderer\nsoftware=0\n\n", fd );
+#if !((defined __APPLE__) || (defined WIN32))
+        fputs( "; Location of the datafiles\ndatadir=", fd );
+        fputs( ASSETDIR "\n\n", fd );
+#endif
+        fputs( "; Use mono audio only\nmono=0\n\n", fd );
+        fputs( "; Grab the mouse to the window\ngrabmouse=0\n\n", fd );
+        fputs( "; Set the scale factor\nscale=2\n\n", fd );
+        fputs( "; Use anti-aliasing\n; Looks horrible, never enable it\nantialias=0\n\n", fd );
+//        fputs( "; Set the width of the window\nx=320\n\n", fd );
+//        fputs( "; Set the height of the window\ny=200\n\n", fd );
+        fputs( "; Key mappings\n", fd );
+        fputs( "left=LEFT\nright=RIGHT\nup=UP\ndown=DOWN\n", fd );
+        fputs( "fire=SPACE\nweapprev=CTRL_R\nweapnext=INSERT\n", fd );
+        fputs( "; Alternative key bindings\n; Note: only the following keys can have two bindings\n", fd );
+        fputs( "left2=a\nright2=d\nup2=w\ndown2=s\n", fd );
+        fclose( fd );
+    }
+    else
+    {
+        printf( "Unable to create 'abuserc' file.\n" );
+    }
+}
+
+//
+// Read in the 'abuserc' file
+//
+void readRCFile()
+{
+    FILE *fd = NULL;
+    char *rcfile;
+    char buf[255];
+    char *result;
+
+    rcfile = (char *)malloc( strlen( get_save_filename_prefix() ) + 9 );
+    sprintf( rcfile, "%s/abuserc", get_save_filename_prefix() );
+    if( (fd = fopen( rcfile, "r" )) != NULL )
+    {
+        while( fgets( buf, sizeof( buf ), fd ) != NULL )
+        {
+            result = strtok( buf, "=" );
+            if( strcasecmp( result, "fullscreen" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.fullscreen = atoi( result );
+            }
+            else if( strcasecmp( result, "software" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.software = atoi( result );
+            }
+            else if( strcasecmp( result, "mono" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.mono = atoi( result );
+            }
+            else if( strcasecmp( result, "grabmouse" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.grabmouse = atoi( result );
+            }
+            else if( strcasecmp( result, "scale" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                scale = atoi( result );
+//                flags.xres = xres * atoi( result );
+//                flags.yres = yres * atoi( result );
+            }
+/*            else if( strcasecmp( result, "x" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.xres = atoi( result );
+            }
+            else if( strcasecmp( result, "y" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.yres = atoi( result );
+            }*/
+            else if( strcasecmp( result, "antialias" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                if( atoi( result ) )
+                {
+                    flags.antialias = 1;
+                }
+            }
+            else if( strcasecmp( result, "datadir" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                set_filename_prefix( result );
+            }
+            else if( strcasecmp( result, "left" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.left = key_value( result );
+            }
+            else if( strcasecmp( result, "right" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.right = key_value( result );
+            }
+            else if( strcasecmp( result, "up" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.up = key_value( result );
+            }
+            else if( strcasecmp( result, "down" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.down = key_value( result );
+            }
+            else if( strcasecmp( result, "left2" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.left_2 = key_value( result );
+            }
+            else if( strcasecmp( result, "right2" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.right_2 = key_value( result );
+            }
+            else if( strcasecmp( result, "up2" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.up_2 = key_value( result );
+            }
+            else if( strcasecmp( result, "down2" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.down_2 = key_value( result );
+            }
+            else if( strcasecmp( result, "fire" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.b2 = key_value( result );
+            }
+            else if( strcasecmp( result, "special" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.b1 = key_value( result );
+            }
+            else if( strcasecmp( result, "weapprev" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.b3 = key_value( result );
+            }
+            else if( strcasecmp( result, "weapnext" ) == 0 )
+            {
+                result = strtok( NULL,"\n" );
+                keys.b4 = key_value( result );
+            }
+        }
+        fclose( fd );
+    }
+    else
+    {
+        // Couldn't open the abuserc file so let's create a default one
+        createRCFile( rcfile );
+    }
+    free( rcfile );
+}
+
+//
 // Parse the command-line parameters
 //
 void parseCommandLine(int argc, char **argv)
@@ -557,6 +730,92 @@ void parseCommandLine(int argc, char **argv)
 			settings.local_save = false;
 		}
 	}
+
+    for( int ii = 1; ii < argc; ii++ )
+    {
+        if( !strcasecmp( argv[ii], "-fullscreen" ) )
+        {
+            flags.fullscreen = 1;
+        }
+        else if( !strcasecmp( argv[ii], "-size" ) )
+        {
+            if( ii + 1 < argc && !sscanf( argv[++ii], "%d", &xres ) )
+            {
+                xres = 320;
+            }
+            if( ii + 1 < argc && !sscanf( argv[++ii], "%d", &yres ) )
+            {
+                yres = 200;
+            }
+        }
+        else if( !strcasecmp( argv[ii], "-scale" ) )
+        {
+            // FIXME: Pretty sure scale does nothing now
+            int result;
+            if( sscanf( argv[++ii], "%d", &result ) )
+            {
+                scale = result;
+/*                flags.xres = xres * scale;
+                flags.yres = yres * scale; */
+            }
+        }
+/*        else if( !strcasecmp( argv[ii], "-x" ) )
+        {
+            int x;
+            if( sscanf( argv[++ii], "%d", &x ) )
+            {
+                flags.xres = x;
+            }
+        }
+        else if( !strcasecmp( argv[ii], "-y" ) )
+        {
+            int y;
+            if( sscanf( argv[++ii], "%d", &y ) )
+            {
+                flags.yres = y;
+            }
+        }*/
+        else if( !strcasecmp( argv[ii], "-window" ) )
+        {
+            flags.fullscreen = 0;
+        }
+        else if( !strcasecmp( argv[ii], "-software" ) )
+        {
+            flags.software = 1;
+        }
+        else if( !strcasecmp( argv[ii], "-nosound" ) )
+        {
+            flags.nosound = 1;
+        }
+        else if( !strcasecmp( argv[ii], "-antialias" ) )
+        {
+            flags.antialias = 1;
+        }
+        else if( !strcasecmp( argv[ii], "-mono" ) )
+        {
+            flags.mono = 1;
+        }
+        else if( !strcasecmp( argv[ii], "-datadir" ) )
+        {
+            char datadir[255];
+            if( ii + 1 < argc && sscanf( argv[++ii], "%s", datadir ) )
+            {
+                set_filename_prefix( datadir );
+            }
+        }
+        else if( !strcasecmp( argv[ii], "-h" ) || !strcasecmp( argv[ii], "--help" ) )
+        {
+            showHelp(argv[0]);
+            exit( 0 );
+        }
+        else if ( !strcasecmp( argv[ii], "-pause" ) )
+        {
+            // Debug command to force a pause here
+            printf("Pausing, press any key to resume (attach debugger now!) . . .");
+            getc(stdin);
+            printf("\n");
+        }
+    }
 }
 
 //
@@ -566,6 +825,26 @@ void setup( int argc, char **argv )
 {
 	// Display our name and version
     //printf( "%s %s\n", PACKAGE_NAME, PACKAGE_VERSION );
+    // Initialize default settings
+    flags.fullscreen         = 1;    // Start fullscreen (actually windowed-fullscreen now)
+    flags.software           = 0;    // Don't use software renderer by default
+    flags.mono               = 0;    // Enable stereo sound
+    flags.nosound            = 0;    // Enable sound
+    flags.grabmouse          = 0;    // Don't grab the mouse
+    flags.xres = xres        = 320;  // Default window width
+    flags.yres = yres        = 200;  // Default window height
+    flags.antialias          = 0;    // Don't anti-alias
+    keys.up                  = key_value( "UP" );
+    keys.down                = key_value( "DOWN" );
+    keys.left                = key_value( "LEFT" );
+    keys.right               = key_value( "RIGHT" );
+    keys.up_2                = key_value( "w" );
+    keys.down_2              = key_value( "s" );
+    keys.left_2              = key_value( "a" );
+    keys.right_2             = key_value( "d" );
+    keys.b3                  = key_value( "CTRL_R" );
+    keys.b4                  = key_value( "INSERT" );
+    scale                    = 2;    // Default scale amount
 
 	//AR
 	printf( "%s %s\n", "Abuse", "0.9a" );

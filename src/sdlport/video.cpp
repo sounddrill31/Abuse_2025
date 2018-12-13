@@ -86,7 +86,9 @@ void set_mode(int argc, char **argv)
         show_startup_error("Video : Unable to create window : %s", SDL_GetError());
         exit(1);
     }
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+
+    renderer = SDL_CreateRenderer(window, -1, flags.software ? SDL_RENDERER_SOFTWARE : SDL_RENDERER_ACCELERATED);
+
     if (renderer == NULL)
     {
         show_startup_error("Video : Unable to create renderer : %s", SDL_GetError());
