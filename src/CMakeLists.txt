@@ -105,6 +105,13 @@ endif()
 # 	tool/AR_SPEC.cpp tool/AR_SPEC.h
 # 	tool/AR_Help.cpp tool/AR_Help.h)
 
+if(APPLE)
+    # Link CoreFoundation
+    target_link_libraries(abuse "-framework CoreFoundation")
+endif()
+
+add_executable(abuse-tool tool/abuse-tool.cpp crc.cpp crc.h)
+
 
 # target_link_libraries(abuse-tool imlib)
 
