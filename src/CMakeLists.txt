@@ -99,13 +99,14 @@ if(APPLE)
     target_link_libraries(abuse "-framework CoreFoundation")
 endif()
 
-add_executable(abuse-tool
-	tool/abuse-tool.cpp
-	crc.cpp crc.h
-	tool/AR_SPEC.cpp tool/AR_SPEC.h
-	tool/AR_Help.cpp tool/AR_Help.h)
+# add_executable(abuse-tool
+# 	tool/abuse-tool.cpp
+# 	crc.cpp crc.h
+# 	tool/AR_SPEC.cpp tool/AR_SPEC.h
+# 	tool/AR_Help.cpp tool/AR_Help.h)
 
-target_link_libraries(abuse-tool imlib)
+
+# target_link_libraries(abuse-tool imlib)
 
 include_directories(
     ${abuse_SOURCE_DIR}/src
@@ -124,7 +125,7 @@ if(WIN32)
     install(FILES $<TARGET_FILE:SDL2_mixer::SDL2_mixer> DESTINATION ".")
 else()
     # Under Linux, we want the tools in bin
-    install(TARGETS abuse abuse-tool RUNTIME DESTINATION bin
+    install(TARGETS abuse RUNTIME DESTINATION bin
     BUNDLE DESTINATION "${CMAKE_INSTALL_PREFIX}")
     if(APPLE)
         # macOS should probably include SDL rather than dynamically link them like Linux does
