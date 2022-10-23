@@ -1473,7 +1473,7 @@ Game::Game(int argc, char **argv)
     exit(0);
   }
 
-
+  // load_data loaded the mouse cursor, use it in case gamma_correct needs to show UI
   wm->SetMouseShape(cache.img(c_normal)->copy(), ivec2(1));
 
   gamma_correct(pal);
