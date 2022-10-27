@@ -17,7 +17,6 @@ endif()
 if (VCPKG_TARGET_TRIPLET)
     # If using vcpkg, don't specify versions, they're in the manifest
     find_package(SDL2 CONFIG REQUIRED)
-
     find_package(SDL2_mixer CONFIG REQUIRED)
 
 else()
@@ -25,7 +24,6 @@ else()
     find_package(SDL2 2.0.0 REQUIRED)
     find_package(SDL2_mixer 2.0.0 REQUIRED)
     # For compatibility with vcpkg, configure SDL2_mixer as an imported shared library
-
     add_library(SDL2_mixer::SDL2_mixer SHARED IMPORTED)
     set_property(TARGET SDL2_mixer::SDL2_mixer PROPERTY IMPORTED_LOCATION "${SDL2_MIXER_LIBRARY}")
     set_property(TARGET SDL2_mixer::SDL2_mixer PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${SDL2_MIXER_INCLUDE_DIRS}")

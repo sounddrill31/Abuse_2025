@@ -129,9 +129,7 @@ if(WIN32)
         RUNTIME DESTINATION "."
         LIBRARY DESTINATION ".")
     install(FILES $<TARGET_FILE:SDL2::SDL2> DESTINATION ".")
-
     install(FILES $<TARGET_FILE:SDL2_mixer::SDL2_mixer> DESTINATION ".")
-
 else()
     # Under Linux, we want the tools in bin
     install(TARGETS abuse RUNTIME DESTINATION bin
