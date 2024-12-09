@@ -13,6 +13,8 @@
 #   include "config.h"
 #endif
 
+#include "common.h"
+
 #ifdef WIN32
 # include <WinSock2.h>
 # include <Windows.h>
@@ -106,25 +108,6 @@ Settings settings;
 #include "tcpip.h"
 tcpip_protocol tcpip;
 #endif
-
-FILE *open_FILE(char const *filename, char const *mode)
-{
-    /* FIXME: potential buffer overflow here */
-    char tmp_name[200];
-#ifdef WIN32
-    // Need to make sure it's not an absolute Windows path
-    if(get_filename_prefix() && filename[0] != '/' && (filename[0] != '\0' && filename[1] != ':'))
-#else
-    if(get_filename_prefix() && filename[0] != '/')
-#endif
-    {
-        sprintf(tmp_name, "%s %s", get_filename_prefix(), filename);
-    }
-    else
-        strcpy(tmp_name, filename);
-    //printf("open_FILE(%s)\n", tmp_name);
-    return fopen(tmp_name, mode);
-}
 
 void handle_no_space()
 {
@@ -565,8 +548,8 @@ void Game::load_level(char const *name)
     {
         delete fp;
         current_level = new level(100, 100, name);
-        char msg[100];
-        sprintf(msg, symbol_str("no_file"), name);
+        char msg[200];        
+        snprintf(msg, sizeof(msg), "%s: %s", symbol_str("no_file"), name);
         show_help(msg);
     }
     else
@@ -1377,10 +1360,10 @@ Game::Game(int argc, char **argv)
   else dprintf("not detected\n");
 
     // Clean up that old crap
-    char *fastpath = (char *)malloc(strlen(get_save_filename_prefix()) + 13);
-    sprintf(fastpath, "%sfastload.dat", get_save_filename_prefix());
-    unlink(fastpath);
-    free(fastpath);
+    // char *fastpath = (char *)malloc(strlen(get_save_filename_prefix()) + 13);
+    // sprintf(fastpath, "%sfastload.dat", get_save_filename_prefix());
+    // unlink(fastpath);
+    // free(fastpath);
 
 //    ProfilerInit(collectDetailed, bestTimeBase, 2000, 200); //prof
     load_data(argc, argv);
@@ -1391,7 +1374,7 @@ Game::Game(int argc, char **argv)
 
   reset_keymap();                   // we think all the keys are up right now
   finished = false;
-
+  
   calc_light_table(pal);
 
   if(current_level == NULL && net_start())  // if we joined a net game get level from server
@@ -1405,12 +1388,12 @@ Game::Game(int argc, char **argv)
   }
 
   set_mode(argc, argv);
-  if(get_option("-2") && (xres < 639 || yres < 399))
-  {
-    close_graphics();
-    fprintf(stderr, "Resolution must be > 640x400 to use -2 option\n");
-    exit(0);
-  }
+  // if(get_option("-2") && (xres < 639 || yres < 399))
+  // {
+  //   close_graphics();
+  //   fprintf(stderr, "Resolution must be > 640x400 to use -2 option\n");
+  //   exit(0);
+  // }
   pal->load();
 
   recalc_local_view_space();   // now that we know what size the screen is...
@@ -1590,60 +1573,63 @@ void Game::update_screen()
 
 }
 
-// FIXME: refactor this to use the Lol Engine main fixed-framerate loop?
 int Game::calc_speed()
 {
-	//AR update entities using SDL_GetTicks() after custom time
-	return 1;
-	
-	/*static Timer frame_timer;
-    static int first = 1;
+  static Uint32 last_tick = SDL_GetTicks();
+  static int first = 1;
 
-    if (first)
+  // First call initializes timer
+  if (first)
+  {
+    first = 0;
+    return 0;
+  }
+
+  // Calculate frame timing
+  Uint32 current_tick = SDL_GetTicks();
+  Uint32 frame_time = current_tick - last_tick;
+
+  // Target frame times
+  const Uint32 EDIT_MODE_TARGET = 33; // 30 FPS
+  const Uint32 GAME_MODE_TARGET = 66; // 15 FPS
+  const Uint32 PANIC_THRESHOLD = 100; // 10 FPS
+
+  int ret = 0;
+
+  if (dev & EDIT_MODE)
+  {
+    // In edit mode, limit to 30 FPS
+    Uint32 target_tick = last_tick + EDIT_MODE_TARGET;
+    if (current_tick < target_tick && need_delay && !no_delay)
     {
-        first = 0;
-        return 0;
+      SDL_Delay(target_tick - current_tick);
     }
-
-    // Find average fps for last 10 frames
-    float deltams = Max(1.0f, frame_timer.PollMs());
-
-    avg_ms = 0.9f * avg_ms + 0.1f * deltams;
-    possible_ms = 0.9f * possible_ms + 0.1f * deltams;
-
-    if (avg_ms < 1000.0f / 14)
-        massive_frame_panic = Max(0, Min(20, massive_frame_panic - 1));
-
-    int ret = 0;
-
-    if (dev & EDIT_MODE)
+  }
+  else
+  {
+    // Normal game mode targeting 15 FPS
+    Uint32 target_tick = last_tick + GAME_MODE_TARGET;
+    if (current_tick < target_tick && need_delay)
     {
-        // ECS - Added this case and the wait.  It's a cheap hack to ensure
-        // that we don't exceed 30FPS in edit mode and hog the CPU.
-        frame_timer.WaitMs(33);
+      frame_panic = 0;
+      if (!no_delay)
+      {
+        SDL_Delay(target_tick - current_tick);
+      }
     }
-    else if (avg_ms < 1000.0f / 15 && need_delay)
+    else if (frame_time > PANIC_THRESHOLD)
     {
-        frame_panic = 0;
-        if (!no_delay)
-        {
-            frame_timer.WaitMs(1000.0f / 15);
-            avg_ms -= 0.1f * deltams;
-            avg_ms += 0.1f * 1000.0f / 15;
-        }
+      // We're running too slow
+      massive_frame_panic++;
+      frame_panic++;
+      ret = 1;
     }
-    else if (avg_ms > 1000.0f / 14)
-    {
-        if(avg_ms > 1000.0f / 10)
-            massive_frame_panic++;
-        frame_panic++;
-        // All is lost, don't sleep during this frame
-        ret = 1;
-    }
+  }
 
-    // Ignore our wait time, we're more interested in the frame time
-    frame_timer.GetMs();
-    return ret;*/
+  // Store the target time rather than actual time
+  last_tick += (dev & EDIT_MODE) ? EDIT_MODE_TARGET : GAME_MODE_TARGET;
+
+  return ret;
 }
 
 extern int start_edit;
@@ -1975,114 +1961,117 @@ void net_receive()
 
 void Game::step()
 {
-	//AR virtual crosshair inside a circle, solves atan2(axisy,axisx) aiming dead zone problems	
-	static float aimx = 0, aimy = 0;
+  // AR virtual crosshair inside a circle, solves atan2(axisy,axisx) aiming dead zone problems
+  static float aimx = 0, aimy = 0;
 
-	settings.player_touching_console = false;
-	settings.in_game = false;
+  settings.player_touching_console = false;
+  settings.in_game = false;
 
-	LSpace::Tmp.Clear();
-	if(current_level)
-	{
-		current_level->unactivate_all();
-		total_active = 0;
-		for(view *f = first_view; f; f = f->next)
-		{
-			if(f->m_focus)
-			{
-				f->update_scroll();	
-				
-				//AR
-				settings.in_game = true;
+  LSpace::Tmp.Clear();
+  if (current_level)
+  {
+    current_level->unactivate_all();
+    total_active = 0;
+    for (view *f = first_view; f; f = f->next)
+    {
+      if (f->m_focus)
+      {
+        f->update_scroll();
 
-				if(settings.cheat_god) f->god = 1;
-				else f->god = 0;							
-				
-				//AR aim with the controller each update, don't wait for input event (-13 moves center to chest area)
-				if(settings.ctr_aim==1)
-				{
-					//convert to percentage above "dead zone", don't move if value below "dead zone", range [-32767,32767]
-					float fx = 0, fy = 0;
-					
-					if(fabs(settings.ctr_aim_x)>settings.ctr_rst_dz)
-						fx = (fabs(settings.ctr_aim_x)-settings.ctr_rst_dz)/(33000-settings.ctr_rst_dz);
+        // AR
+        settings.in_game = true;
 
-					if(fabs(settings.ctr_aim_y)>settings.ctr_rst_dz)
-						fy = (fabs(settings.ctr_aim_y)-settings.ctr_rst_dz)/(33000-settings.ctr_rst_dz);
-					
-					//move virtual crosshair inside a circular area, based on right stick state and sensitivity
-					float angle = atan2(settings.ctr_aim_y,settings.ctr_aim_x);
-					aimx += cos(angle)*(settings.ctr_rst_s*fx);
-					aimy += sin(angle)*(settings.ctr_rst_s*fy);
+        if (settings.cheat_god)
+          f->god = 1;
+        else
+          f->god = 0;
 
-					//calculate aim based on the virtual crosshair
-					angle = atan2(aimy,aimx);
-					
-					//set position of real crosshair
-					wm->SetMousePos(ivec2(
-						f->m_focus->x - f->xoff() + cos(angle)*settings.ctr_cd + settings.ctr_aim_correctx,
-						f->m_focus->y - f->yoff() + sin(angle)*settings.ctr_cd - 13));
+        // AR aim with the controller each update, don't wait for input event (-13 moves center to chest area)
+        if (settings.ctr_aim == 1)
+        {
+          // convert to percentage above "dead zone", don't move if value below "dead zone", range [-32767,32767]
+          float fx = 0, fy = 0;
 
-					//if outside circle reposition to the edge of circle for the next update
-					//10 is just random, sesitivity is controlled using settings.ctr_rst_s
-					aimx = cos(angle)*10;
-					aimy = sin(angle)*10;					
-				}
-				//
-				
-				int w, h;
+          if (fabs(settings.ctr_aim_x) > settings.ctr_rst_dz)
+            fx = (fabs(settings.ctr_aim_x) - settings.ctr_rst_dz) / (33000 - settings.ctr_rst_dz);
 
-				w = (f->m_bb.x - f->m_aa.x + 1);
-				h = (f->m_bb.y - f->m_aa.y + 1);
-				total_active += current_level->add_actives(f->xoff()-w / 4, f->yoff()-h / 4,
-					f->xoff()+w + w / 4, f->yoff()+h + h / 4);
-			}
-		}
-	}
-	
-	if(state == RUN_STATE)
-	{
-		if((dev & EDIT_MODE) || (main_net_cfg && (main_net_cfg->state == net_configuration::CLIENT ||
-			main_net_cfg->state == net_configuration::SERVER)))
-			idle_ticks = 0;
+          if (fabs(settings.ctr_aim_y) > settings.ctr_rst_dz)
+            fy = (fabs(settings.ctr_aim_y) - settings.ctr_rst_dz) / (33000 - settings.ctr_rst_dz);
 
-		if(demo_man.current_state()==demo_manager::NORMAL && idle_ticks > 420 && demo_start)
-		{
-			idle_ticks = 0;
-			set_state(MENU_STATE);
-		}
-		else if(!(dev & EDIT_MODE)) // if edit mode, then don't step anything
-		{
-			//AR active play state
-			if(key_down(JK_ESC))
-			{
-				set_state(MENU_STATE);
-				set_key_down(JK_ESC, 0);
-			}
-			ambient_ramp = 0;
-			view *v;
-			for(v = first_view; v; v = v->next)
-				v->update_scroll();
+          // move virtual crosshair inside a circular area, based on right stick state and sensitivity
+          float angle = atan2(settings.ctr_aim_y, settings.ctr_aim_x);
+          aimx += cos(angle) * (settings.ctr_rst_s * fx);
+          aimy += sin(angle) * (settings.ctr_rst_s * fy);
 
-			cache.prof_poll_start();
-			current_level->tick();
-			sbar.step();
-		} else
-			dev_scroll();
-	} else if(state == JOY_CALB_STATE)
-	{
-		Event ev;
-		joy_calb(ev);
-	} else if(state == MENU_STATE)
-	{
-		settings.in_game = false;
-		main_menu();//AR this is a main menu LOOP, it handles events and rendering inside !
-	}
+          // calculate aim based on the virtual crosshair
+          angle = atan2(aimy, aimx);
 
-	if((key_down('x') || key_down(JK_F4))
-		&& (key_down(JK_ALT_L) || key_down(JK_ALT_R))
-		&& confirm_quit())
-		finished = true;
+          // set position of real crosshair
+          wm->SetMousePos(ivec2(
+              f->m_focus->x - f->xoff() + cos(angle) * settings.ctr_cd + settings.ctr_aim_correctx,
+              f->m_focus->y - f->yoff() + sin(angle) * settings.ctr_cd - 13));
+
+          // if outside circle reposition to the edge of circle for the next update
+          // 10 is just random, sesitivity is controlled using settings.ctr_rst_s
+          aimx = cos(angle) * 10;
+          aimy = sin(angle) * 10;
+        }
+        //
+
+        int w, h;
+
+        w = (f->m_bb.x - f->m_aa.x + 1);
+        h = (f->m_bb.y - f->m_aa.y + 1);
+        total_active += current_level->add_actives(f->xoff() - w / 4, f->yoff() - h / 4,
+                                                   f->xoff() + w + w / 4, f->yoff() + h + h / 4);
+      }
+    }
+  }
+
+  if (state == RUN_STATE)
+  {
+    if ((dev & EDIT_MODE) || (main_net_cfg && (main_net_cfg->state == net_configuration::CLIENT ||
+                                               main_net_cfg->state == net_configuration::SERVER)))
+      idle_ticks = 0;
+    
+    if (demo_man.current_state() == demo_manager::NORMAL && idle_ticks > 420 && demo_start)
+    {
+      idle_ticks = 0;
+      set_state(MENU_STATE);
+    }
+    else if (!(dev & EDIT_MODE)) // if edit mode, then don't step anything
+    {
+      // AR active play state
+      if (key_down(JK_ESC))
+      {
+        set_state(MENU_STATE);
+        set_key_down(JK_ESC, 0);
+      }
+      ambient_ramp = 0;
+      view *v;
+      for (v = first_view; v; v = v->next)
+        v->update_scroll();
+
+      cache.prof_poll_start();
+      current_level->tick();
+      sbar.step();
+    }
+    else
+      dev_scroll();
+  }
+  else if (state == JOY_CALB_STATE)
+  {
+    Event ev;
+    joy_calb(ev);
+  }
+  else if (state == MENU_STATE)
+  {
+    settings.in_game = false;
+    main_menu(); // AR this is a main menu LOOP, it handles events and rendering inside !
+  }
+
+  if ((key_down('x') || key_down(JK_F4)) && (key_down(JK_ALT_L) || key_down(JK_ALT_R)) && confirm_quit())
+    finished = true;
 }
 
 extern void *current_demo;
@@ -2287,10 +2276,10 @@ void game_getter(char *st, int max)
 
 void show_startup()
 {
-    //dprintf("Abuse version %s\n", PACKAGE_VERSION);
+    dprintf("Abuse version %s\n", PACKAGE_VERSION);
 
 	//AR
-	printf( "Abuse version %s\n", "0.9a" );
+	// printf( "Abuse version %s\n", "0.9a" );
 }
 
 char *get_line(int open_braces)
@@ -2411,165 +2400,121 @@ void game_net_init(int argc, char **argv)
 
 int main(int argc, char *argv[])
 {
-    start_argc = argc;
-    start_argv = argv;
+  start_argc = argc;
+  start_argv = argv;
 
-    for (int i = 0; i < argc; i++)
+  for (int i = 0; i < argc; i++)
+  {
+    if (!strcmp(argv[i], "-cprint"))
+      external_print = 1;
+  }
+
+  set_dprinter(game_printer);
+  set_dgetter(game_getter);
+  set_no_space_handler(handle_no_space);
+
+  setup(argc, argv);
+
+  show_startup();
+
+  start_sound(argc, argv);
+
+  stat_man = new text_status_manager();
+
+  jrand_init();
+  jrand(); // so compiler doesn't complain
+
+  set_spec_main_file("abuse.spe");
+  check_for_lisp(argc, argv);
+
+  do
+  {
+    if (main_net_cfg && !main_net_cfg->notify_reset())
     {
-        if (!strcmp(argv[i], "-cprint"))
-            external_print = 1;
+      sound_uninit();
+      exit(0);
     }
 
-#if (defined(__APPLE__) && !defined(__MACH__))
-    unsigned char km[16];
-
-    fprintf(stderr, "Mac Options: ");
-    xres = 320; yres = 200;
-    GetKeys((uint32_t*)&km);
-    if ((km[ 0x3a >>3] >> (0x3a & 7)) &1 != 0)
-    {
-        dev|=EDIT_MODE;
-        start_edit = 1;
-        start_running = 1;
-        disable_autolight = 1;
-        fprintf(stderr, "Edit Mode...");
-    }
-    if ((km[ 0x3b >>3] >> (0x3b & 7)) &1 != 0)
-    {
-        PixMult = 1;
-        fprintf(stderr, "Single Pixel...");
-    }
-    else
-    {
-        PixMult = 2;
-        fprintf(stderr, "Double Pixel...");
-    }
-    if ((km[ 0x38 >>3] >> (0x38 & 7)) &1 != 0)
-    {
-        xres *= 2;  yres *= 2;
-        fprintf(stderr, "Double Size...");
-    }
-    fprintf(stderr, "\n");
-
-    if (tcpip.installed())
-        fprintf(stderr, "Using %s\n", tcpip.name());
-#endif
-
-    set_dprinter(game_printer);
-    set_dgetter(game_getter);
-    set_no_space_handler(handle_no_space);
-
-    setup(argc, argv);
-
-    show_startup();
-
-    start_sound(argc, argv);
-
-    stat_man = new text_status_manager();
-
-#if !defined __CELLOS_LV2__
-    // look to see if we are supposed to fetch the data elsewhere
-    if (getenv("ABUSE_PATH"))
-        set_filename_prefix(getenv("ABUSE_PATH"));
-
-    // look to see if we are supposed to save the data elsewhere
-    if (getenv("ABUSE_SAVE_PATH"))
-        set_save_filename_prefix(getenv("ABUSE_SAVE_PATH"));
-#endif
-
-    jrand_init();
-    jrand(); // so compiler doesn't complain
-
-    set_spec_main_file("abuse.spe");
-    check_for_lisp(argc, argv);
-
-    do
-    {
-        if (main_net_cfg && !main_net_cfg->notify_reset())
-        {
-            sound_uninit();
-            exit(0);
-        }
-
-        game_net_init(argc, argv);
-        Lisp::Init();
+    game_net_init(argc, argv);
+    Lisp::Init();
 
 		//AR start editor via config file, or if command line
 		if(settings.editor) AR_dev_init();
 		else dev_init(argc, argv);
 
-		//AR the intro loop is in the constructor itself
-        Game *g = new Game(argc, argv);
 
-		dev_cont = new dev_controll();
-        dev_cont->load_stuff();
+    Game *g = new Game(argc, argv);
 
-        g->get_input(); // prime the net
+    dev_cont = new dev_controll();
+    dev_cont->load_stuff();
 
-        for (int i = 1; i + 1 < argc; i++)
+    g->get_input(); // prime the net
+
+    for (int i = 1; i + 1 < argc; i++)
+    {
+      if (!strcmp(argv[i], "-server"))
+      {
+        if (!become_server(argv[i + 1]))
         {
-            if (!strcmp(argv[i], "-server"))
-            {
-                if (!become_server(argv[i + 1]))
-                {
-                    dprintf("unable to become a server\n");
-                    exit(0);
-                }
-                break;
-            }
+          dprintf("unable to become a server\n");
+          exit(0);
         }
+        break;
+      }
+    }
 
-        if (main_net_cfg)
-            wait_min_players();
+    if (main_net_cfg)
+      wait_min_players();
 
-        net_send(1);
-        if (net_start())
-        {
-            g->step(); // process all the objects in the world
-            g->calc_speed();
-            g->update_screen(); // redraw the screen with any changes
-        }
+    net_send(1);
+    if (net_start())
+    {
+      g->step(); // process all the objects in the world
+      g->calc_speed();
+      g->update_screen(); // redraw the screen with any changes
+    }
 
-		Uint32 ar_lastupdate = 0;
-		float ar_bullettime = 0.0f;
-		Uint32 ar_bt_timer = 0;
+    Uint32 ar_lastupdate = 0;
+    float ar_bullettime = 0.0f;
+    Uint32 ar_bt_timer = 0;
 
-		while(!g->done())
-		{
-			music_check();
+    while (!g->done())
+    {
+      music_check();
 
-			if (req_end)
-			{
-				delete current_level; current_level = NULL;
+      if (req_end)
+      {
+        delete current_level;
+        current_level = NULL;
 
-				show_end();
+        show_end();
 
-				the_game->set_state(MENU_STATE);
-				req_end = 0;
-			}
+        the_game->set_state(MENU_STATE);
+        req_end = 0;
+      }
 
-			if (demo_man.current_state() == demo_manager::NORMAL)
-				net_receive();
+      if (demo_man.current_state() == demo_manager::NORMAL)
+        net_receive();
 
-			// see if a request for a level load was made during the last tick
-			if (req_name[0])
-			{
-				g->load_level(req_name);
-				req_name[0] = 0;
-				g->draw(g->state == SCENE_STATE);
-			}
+      // see if a request for a level load was made during the last tick
+      if (req_name[0])
+      {
+        g->load_level(req_name);
+        req_name[0] = 0;
+        g->draw(g->state == SCENE_STATE);
+      }
 
-			//if (demo_man.current_state() != demo_manager::PLAYING)
-			g->get_input();
+      // if (demo_man.current_state() != demo_manager::PLAYING)
+      g->get_input();
 
-			if (demo_man.current_state() == demo_manager::NORMAL)
-				net_send();
-			else
-				demo_man.do_inputs();
+      if (demo_man.current_state() == demo_manager::NORMAL)
+        net_send();
+      else
+        demo_man.do_inputs();
 
-			service_net_request();
+      service_net_request();
 
-			//AR bullet time
+      //AR bullet time
 			if(settings.bullet_time)
 			{
 				if(SDL_GetTicks()-ar_bt_timer>50)
@@ -2588,79 +2533,80 @@ int main(int argc, char *argv[])
 				}
 				if(ar_bullettime<0) ar_bullettime = 0;
 			}
-			//
-			
-			// process all the objects in the world
-			if(SDL_GetTicks()-ar_lastupdate>=(settings.physics_update + ar_bullettime*settings.physics_update))
-			{
-				//AR update game at custom framerate, original is 15 FPS, physics are locked at 15 FPS
-				ar_lastupdate = SDL_GetTicks();
-				
-				g->step();//AR there are loops inside, it doesn't leave the menu loop, until menu says so!
-			}
 
-			server_check();
-			g->calc_speed();
+      // process all the objects in the world
+      g->step();
+      g->calc_speed();
 
-			// see if a request for a level load was made during the last tick
-			if(!req_name[0]) g->update_screen(); // redraw the screen with any changes
-		}
-
-        net_uninit();
-
-        if (net_crcs)
-            net_crcs->clean_up();
-        delete net_crcs; net_crcs = NULL;
-
-        delete chat;
-
-        Timer tmp; tmp.WaitMs(500);
-
-        delete small_render; small_render = NULL;
-
-        if (current_song)
-            current_song->stop();
-        delete current_song; current_song = NULL;
-
-        cache.empty();
-
-        delete dev_console; dev_console = NULL;
-        delete dev_menu; dev_menu = NULL;
-        delete g; g = NULL;
-        delete old_pal; old_pal = NULL;
-
-        compiled_uninit();
-        delete_all_lights();
-        free(white_light_initial);
-
-        for (int i = 0; i < TTINTS; i++)
-            free(tints[i]);
-
-        dev_cleanup();
-        delete dev_cont; dev_cont = NULL;
-        delete stat_man; stat_man = new text_status_manager();
-
-        if (!(main_net_cfg && main_net_cfg->restart_state()))
-        {
-            LSymbol *end_msg = LSymbol::FindOrCreate("end_msg");
-            if (DEFINEDP(end_msg->GetValue()))
-                printf("%s\n", lstring_value(end_msg->GetValue()));
-        }
-
-        Lisp::Uninit();
-
-        base->packet.packet_reset();
+      // see if a request for a level load was made during the last tick
+      if (!req_name[0])
+        g->update_screen(); // redraw the screen with any changes
     }
 
-    while (main_net_cfg && main_net_cfg->restart_state());
+    net_uninit();
 
+    if (net_crcs)
+      net_crcs->clean_up();
+    delete net_crcs;
+    net_crcs = NULL;
+
+    delete chat;
+
+    Timer tmp;
+    tmp.WaitMs(500);
+
+    delete small_render;
+    small_render = NULL;
+
+    if (current_song)
+      current_song->stop();
+    delete current_song;
+    current_song = NULL;
+
+    cache.empty();
+
+    delete dev_console;
+    dev_console = NULL;
+    delete dev_menu;
+    dev_menu = NULL;
+    delete g;
+    g = NULL;
+    delete old_pal;
+    old_pal = NULL;
+
+    compiled_uninit();
+    delete_all_lights();
+    free(white_light_initial);
+
+    for (int i = 0; i < TTINTS; i++)
+      free(tints[i]);
+
+    dev_cleanup();
+    delete dev_cont;
+    dev_cont = NULL;
     delete stat_man;
-    delete main_net_cfg; main_net_cfg = NULL;
+    stat_man = new text_status_manager();
 
-    set_filename_prefix(NULL);  // dealloc this mem if there was any
-    set_save_filename_prefix(NULL);
+    if (!(main_net_cfg && main_net_cfg->restart_state()))
+    {
+      LSymbol *end_msg = LSymbol::FindOrCreate("end_msg");
+      if (DEFINEDP(end_msg->GetValue()))
+        printf("%s\n", lstring_value(end_msg->GetValue()));
+    }
 
-    sound_uninit();
+    Lisp::Uninit();
 
-    return 0;
+    base->packet.packet_reset();
+  } while (main_net_cfg && main_net_cfg->restart_state());
+
+  delete stat_man;
+  delete main_net_cfg;
+  main_net_cfg = NULL;
+
+  set_filename_prefix(NULL); // dealloc this mem if there was any
+  set_save_filename_prefix(NULL);
+
+  sound_uninit();
+
+  return 0;
 }

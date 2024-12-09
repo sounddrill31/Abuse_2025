@@ -63,6 +63,7 @@ namespace lol
         return *this = (*this) op val; \
     }
 
+#if elems != dest
 #define CAST_OP(elems, dest) \
     inline operator Vec##dest<T>() const \
     { \
@@ -73,6 +74,9 @@ namespace lol
             ret[n] = 0; \
         return ret; \
     }
+#else
+#define CAST_OP(elems, dest)
+#endif
 
 #define OPERATORS_1(elems) \
     inline T& operator[](int n) { return *(&x + n); } \

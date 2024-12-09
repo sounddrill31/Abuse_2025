@@ -389,8 +389,6 @@ int get_remote_lsf(net_address *addr, char *filename)  // filename should be 256
   return 0;
 }
 
-void server_check() { ; }
-
 int request_server_entry()
 {
   if (prot && main_net_cfg)

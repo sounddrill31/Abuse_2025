@@ -1186,108 +1186,119 @@ void view::configure_for_area(area_controller *a)
   }
 }
 
-
 void process_packet_commands(uint8_t *pk, int size)
 {
-  int32_t sync_uint16=-1;
+  int32_t sync_uint16 = -1;
 
-  if (!size) return ;
-  pk[size]=SCMD_END_OF_PACKET;
+  if (!size)
+    return;
+    
+  pk[size] = SCMD_END_OF_PACKET;
 
   uint8_t cmd;
-  int already_reloaded=0;
-
+  int already_reloaded = 0;
 
   do
   {
-    cmd=*(pk++);
+    cmd = *(pk++);
     switch (cmd)
     {
-      case SCMD_WEAPON_CHANGE :
-      case SCMD_SET_INPUT :
-      case SCMD_VIEW_RESIZE :
-      case SCMD_KEYPRESS :
-      case SCMD_KEYRELEASE :
-      case SCMD_EXT_KEYPRESS :
-      case SCMD_EXT_KEYRELEASE :
-      case SCMD_CHAT_KEYPRESS :
-      {
-    uint8_t player_num=*(pk++);
+    case SCMD_WEAPON_CHANGE:
+    case SCMD_SET_INPUT:
+    case SCMD_VIEW_RESIZE:
+    case SCMD_KEYPRESS:
+    case SCMD_KEYRELEASE:
+    case SCMD_EXT_KEYPRESS:
+    case SCMD_EXT_KEYRELEASE:
+    case SCMD_CHAT_KEYPRESS:
+    {
+      uint8_t player_num = *(pk++);
 
-    view *v=player_list;
-    for (; v && v->player_number!=player_num; v=v->next);
-    if (v)
-    {
-      if (v->player_number==player_num)
-      v->process_input(cmd,pk);
-    }
-    else
-    {
-      dprintf("Evil error : bad player number in packet\n");
-      return ;
-    }
-      } break;
-      case SCMD_RELOAD :
+      view *v = player_list;
+      for (; v && v->player_number != player_num; v = v->next)
+        ;
+      if (v)
       {
-    if (!already_reloaded)
-    {
-      net_reload();
-      already_reloaded=1;
-    }
-      } break;
-
-      case SCMD_SYNC :
-      {
-    uint16_t x;
-    memcpy(&x,pk,2);  pk+=2;
-    x=lstl(x);
-    if (demo_man.current_state()==demo_manager::PLAYING)
-    sync_uint16=make_sync();
-
-    if (sync_uint16==-1)
-    sync_uint16=x;
-    else if (x!=sync_uint16 && !already_reloaded)
-    {
-      dprintf("out of sync %d (packet=%d, calced=%d)\n",current_level->tick_counter(),x,sync_uint16);
-      if (demo_man.current_state()==demo_manager::NORMAL)
-        net_reload();
-      already_reloaded=1;
-    }
-      } break;
-      case SCMD_DELETE_CLIENT :
-      {
-    uint8_t player_num=*(pk++);
-    view *v=player_list,*last=NULL;
-    for (; v && v->player_number!=player_num; v=v->next)
-    last=v;
-    if (!v)
-    dprintf("evil : delete client %d, but no such client\n");
-    else
-    {
-
-      // make a list of all objects associated with this player
-      object_node *on=make_player_onodes(player_num);
-      while (on)
-      {
-        current_level->delete_object(on->me);
-        object_node *last=on;
-        on=on->next;
-        delete last;
+        if (v->player_number == player_num)
+          v->process_input(cmd, pk);
       }
-
-      v->m_focus=NULL;
-      if (last)
-      last->next=v->next;
-      else player_list=player_list->next;
-
-      delete v;
+      else
+      {
+        dprintf("Evil error : bad player number in packet\n");
+        return;
+      }
     }
-      } break;
-      default :
-      dprintf("Unknown net command %d\n",cmd);
-
+    break;
+    case SCMD_RELOAD:
+    {
+      if (!already_reloaded)
+      {
+        net_reload();
+        already_reloaded = 1;
+      }
     }
-  } while (cmd!=SCMD_END_OF_PACKET);
+    break;
+
+    case SCMD_SYNC:
+    {
+      uint16_t x;
+      memcpy(&x, pk, 2);
+      pk += 2;
+      x = lstl(x);
+      if (demo_man.current_state() == demo_manager::PLAYING)
+        sync_uint16 = make_sync();
+
+      if (sync_uint16 == -1)
+        sync_uint16 = x;
+      else if (x != sync_uint16 && !already_reloaded)
+      {
+        dprintf("out of sync %d (packet=%d, calced=%d)\n", current_level->tick_counter(), x, sync_uint16);
+        if (demo_man.current_state() == demo_manager::NORMAL)
+          net_reload();
+        already_reloaded = 1;
+      }
+    }
+    break;
+    
+    case SCMD_DELETE_CLIENT:
+    {
+      uint8_t player_num = *(pk++);
+      view *v = player_list, *last = NULL;
+      for (; v && v->player_number != player_num; v = v->next)
+        last = v;
+      if (!v)
+        dprintf("evil : delete client %d, but no such client\n");
+      else
+      {
+
+        // make a list of all objects associated with this player
+        object_node *on = make_player_onodes(player_num);
+        while (on)
+        {
+          current_level->delete_object(on->me);
+          object_node *last = on;
+          on = on->next;
+          delete last;
+        }
+
+        v->m_focus = NULL;
+        if (last)
+          last->next = v->next;
+        else
+          player_list = player_list->next;
+
+        delete v;
+      }
+    }
+    break;
+    
+    case SCMD_END_OF_PACKET:
+      break;
+      
+    default:
+      dprintf("Unknown net command %d\n", cmd);
+    }
+  } while (cmd != SCMD_END_OF_PACKET);
 }
 
 void view::set_tint(int tint)
