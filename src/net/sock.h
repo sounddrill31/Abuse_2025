@@ -29,7 +29,8 @@ public:
   virtual int ready_to_read()                                      = 0;
   virtual int ready_to_write()                                     = 0;
   virtual int write(void const *buf, int size, net_address *addr=0)   = 0;
-  virtual int read(void *buf, int size, net_address **addr=0)      = 0;
+  virtual int read(void *buf, int size, net_address **addr=0)      = 0;  
+
   virtual int get_fd()                                             = 0;
   virtual ~net_socket()              { ; }
   virtual void read_selectable()     { ; }

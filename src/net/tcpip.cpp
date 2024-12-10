@@ -28,7 +28,6 @@
 
 extern tcpip_protocol tcpip;
 
-#define TCPIP_DEBUG
 
 //{{{ net logging stuff
 
@@ -697,6 +696,7 @@ $Log$
 // folded-file: t
 // End:
 //}}}
+
 
 #endif
 

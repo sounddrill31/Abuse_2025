@@ -43,6 +43,10 @@ check_include_files(bstring.h HAVE_BSTRING_H)
 
 set(HAVE_NETWORK TRUE CACHE BOOL "Enable networking support")
 
+if(TCPIP_DEBUG)
+    add_compile_definitions(TCPIP_DEBUG)
+endif()
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 if(WIN32)

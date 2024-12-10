@@ -38,19 +38,19 @@
 
 (setq load_warn nil)
 
-(if (am_a_client)
-    (if (not (load "addon/deathmat/version.lsp"))
-	(progn
-	  (print "\nThis server is playing an older version, please upgrade it")
-	  (quit))
-      (if (or (not (eq server_version_major (major_version)))
-	      (not (eq server_version_minor (minor_version))))
-	  (progn
-	    (print "\nThis server is playing a different version, cannot continue")
-	    (quit))))
-  (open_file "addon/deathmat/version.lsp" "wb"
-	     (print (list 'setq 'server_version_major (major_version) ))
-	     (print (list 'setq 'server_version_minor (minor_version)))))
+;; (if (am_a_client)
+;;     (if (not (load "addon/deathmat/version.lsp"))
+;; 	(progn
+;; 	  (print "\nThis server is playing an older version, please upgrade it")
+;; 	  (quit))
+;;       (if (or (not (eq server_version_major (major_version)))
+;; 	      (not (eq server_version_minor (minor_version))))
+;; 	  (progn
+;; 	    (print "\nThis server is playing a different version, cannot continue")
+;; 	    (quit))))
+;;   (open_file "addon/deathmat/version.lsp" "wb"
+;; 	     (print (list 'setq 'server_version_major (major_version) ))
+;; 	     (print (list 'setq 'server_version_minor (minor_version)))))
 
 
 (if (not (am_a_client))

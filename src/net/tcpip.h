@@ -139,8 +139,8 @@ extern tcpip_protocol tcpip;
 class unix_fd : public net_socket
 {
   protected :
-  int fd;
-  public :
+  int fd;  
+  public:
   unix_fd(int fd) : fd(fd) { };
   virtual int error()                             { return FD_ISSET(fd,&tcpip.exception_set); }
   virtual int ready_to_read()                     { return FD_ISSET(fd,&tcpip.read_set); }
@@ -154,7 +154,7 @@ class unix_fd : public net_socket
     return FD_ISSET(fd,&write_check);
   }
   virtual int write(void const *buf, int size, net_address *addr=NULL);
-  virtual int read(void *buf, int size, net_address **addr);
+  virtual int read(void *buf, int size, net_address **addr);  
 
 #ifdef WIN32
   virtual ~unix_fd()                            { read_unselectable();  write_unselectable(); closesocket(fd); }
@@ -242,6 +242,7 @@ class udp_socket : public unix_fd
 #endif
     }
   }
+
   virtual int listen(int port)
   {
     sockaddr_in host;
