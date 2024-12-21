@@ -48,7 +48,9 @@ INSTALL(FILES
 DESTINATION ${ASSETDIR}/addon/aliens)
 
 INSTALL(FILES
-    addon/bong/bong.lsp
+    addon/bong/bong.lsp        
+    addon/bong/pong01.lvl
+    addon/bong/bong.spe
 DESTINATION ${ASSETDIR}/addon/bong)
 
 INSTALL(FILES
@@ -276,7 +278,9 @@ INSTALL(FILES
 DESTINATION ${ASSETDIR}/levels/mac)
 
 INSTALL(FILES
-    addon/bong/bong01.lvl
+    addon/bong/bong.lsp        
+    addon/bong/pong01.lvl
+    addon/bong/bong.spe
 DESTINATION ${ASSETDIR}/addon/bong)
 
 INSTALL(FILES
