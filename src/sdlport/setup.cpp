@@ -120,6 +120,7 @@ Settings::Settings()
 	this->physics_update = 65; // original 65ms/15 FPS
 	this->mouse_scale = 0;		 // match desktop
 	this->big_font = false;
+	this->language = "english";
 	//
 	this->bullet_time = false;
 	this->bullet_time_add = 1.2f;
@@ -204,6 +205,10 @@ bool Settings::CreateConfigFile()
 	fprintf(out, "; Enable high resolution screens and font\n");
 	fprintf(out, "hires=%d\n", hires);
 	fprintf(out, "big_font=%d\n\n", big_font);
+
+	fprintf(out, "; LANGUAGE SETTINGS\n\n");
+	fprintf(out, "; Language selection (default: english)\n");
+	fprintf(out, "language=%s\n\n", this->language.c_str());
 
 	fprintf(out, "; Use linear texture filter (nearest is default)\n");
 	fprintf(out, "linear_filter=%d\n\n", linear_filter);
@@ -391,6 +396,8 @@ bool Settings::ReadConfigFile()
 			this->mouse_scale = AR_ToInt(value);
 		else if (attr == "big_font")
 			this->big_font = AR_ToBool(value);
+		else if (attr == "language")
+			this->language = value;
 		else if (attr == "bullet_time")
 			this->bullet_time_add = AR_ToInt(value) / 100.0f;
 
@@ -580,7 +587,7 @@ void parseCommandLine(int argc, char **argv)
 		if (!strcasecmp(argv[i], "-remote_save"))
 		{
 			settings.local_save = false;
-		}
+		}		
 	}
 }
 
@@ -645,6 +652,11 @@ void setup(int argc, char **argv)
 	set_filename_prefix(ASSETDIR);
 	printf("Data path %s\n", ASSETDIR);
 #endif
+
+	if (getenv("ABUSE_PATH"))
+		set_filename_prefix(getenv("ABUSE_PATH"));
+	if (getenv("ABUSE_SAVE_PATH"))
+		set_save_filename_prefix(getenv("ABUSE_SAVE_PATH"));
 
 	// Process any command-line arguments that might override settings
 	parseCommandLine(argc, argv);

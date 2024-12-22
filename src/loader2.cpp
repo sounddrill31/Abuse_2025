@@ -38,6 +38,9 @@
 #include "nfserver.h"
 #include "specache.h"
 
+#include "sdlport/setup.h"
+extern Settings settings;
+
 extern int past_startup;
 
 property_manager *prop;
@@ -294,6 +297,10 @@ void load_data(int argc, char **argv)
     backtiles=NULL;
     pal=NULL;
     color_table=NULL;
+    
+    char const *lang = settings.language.c_str();
+  LSymbol *sym = LSymbol::FindOrCreate("current_language");
+  sym->SetValue(LString::Create(lang));
 
   // don't let them specify a startup file we are connect elsewhere
   if (!net_start())

@@ -43,6 +43,8 @@ public:
 	short physics_update; // custom pysics update time in miliseconds
 	short mouse_scale;		// mouse scaling in fullscreen, 0 - match desktop, 1 - match game screen
 	bool big_font;				// big font doesn't render properly (there are lines under letters and stuff)
+	std::string language; // language
+	
 	//
 	short overlay; // AR ???
 	bool in_game;
