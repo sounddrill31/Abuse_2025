@@ -64,14 +64,6 @@ extern Settings settings;
 //
 void handle_window_resize()
 {
-    // Get current viewport and scaling information
-    SDL_Rect viewport;
-    float scale_x, scale_y;
-
-    SDL_RenderGetViewport(renderer, &viewport);
-    SDL_RenderGetScale(renderer, &scale_x, &scale_y);
-
-    // Maintain aspect ratio by adjusting window width
     int window_width, window_height;
     SDL_GetWindowSize(window, &window_width, &window_height);
 
@@ -82,17 +74,14 @@ void handle_window_resize()
         SDL_SetWindowSize(window, window_width, window_height);
     }
 
-    // Convert logical coordinates to actual screen pixels
-    int width = static_cast<int>(viewport.w * scale_x);
-    int height = static_cast<int>(viewport.h * scale_y);
+    SDL_Rect viewport;
+    SDL_RenderGetViewport(renderer, &viewport);
 
-    // Set up coordinate conversion for mouse input
-    // Uses 16.16 fixed point to maintain precision
-    mouse_xscale = (width << 16) / xres;
-    mouse_yscale = (height << 16) / yres;
+    mouse_xscale = (window_width << 16) / xres;
+    mouse_yscale = (window_height << 16) / yres;
 
-    mouse_xpad = static_cast<int>(viewport.x * scale_x);
-    mouse_ypad = static_cast<int>(viewport.y * scale_y);
+    mouse_xpad = viewport.x;
+    mouse_ypad = viewport.y;
 }
 
 //
@@ -135,7 +124,7 @@ void set_mode(int argc, char **argv)
         yres = settings.virtual_height ? settings.virtual_height : (int)(xres / ((float)settings.screen_width / settings.screen_height));
 
         // Set up window flags based on display settings
-        uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
+        uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
         if (settings.fullscreen == 1)
             flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
         else if (settings.fullscreen == 2)
@@ -156,7 +145,11 @@ void set_mode(int argc, char **argv)
             throw std::runtime_error(SDL_GetError());
         }
 
-        // Try hardware acceleration first, fall back to software rendering
+        int window_pixel_width, window_pixel_height;
+        SDL_GetWindowSizeInPixels(window, &window_pixel_width, &window_pixel_height);
+
+        float scale_factor = static_cast<float>(window_pixel_width) / settings.screen_width;
+
         uint32_t render_flags = SDL_RENDERER_ACCELERATED;
         if (settings.vsync)
             render_flags |= SDL_RENDERER_PRESENTVSYNC;
@@ -170,6 +163,8 @@ void set_mode(int argc, char **argv)
                 throw std::runtime_error(SDL_GetError());
             }
         }
+
+        SDL_RenderSetScale(renderer, scale_factor, scale_factor);
 
         SDL_RenderSetLogicalSize(renderer, xres, yres);
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,
@@ -200,7 +195,7 @@ void set_mode(int argc, char **argv)
         if (!texture)
         {
             throw std::runtime_error(SDL_GetError());
-        }
+        }        
 
         handle_window_resize();
         SDL_ShowCursor(0);
@@ -284,13 +279,12 @@ void close_graphics()
 // Draw a portion of an image to the screen
 //
 void put_part_image(image *im, int x, int y, int x1, int y1, int x2, int y2)
-{
+{    
+    CHECK(x1 >= 0 && x2 >= x1 && y1 >= 0 && y2 >= y1);
+    
     // Skip if completely off screen
     if (y > yres || x > xres)
-        return;
-
-    // Validate coordinates
-    CHECK(x1 >= 0 && x2 >= x1 && y1 >= 0 && y2 >= y1);
+        return;    
 
     // Clip drawing region to screen boundaries
     if (x < 0)
@@ -313,20 +307,21 @@ void put_part_image(image *im, int x, int y, int x1, int y1, int x2, int y2)
     if (x1 >= xe || y1 >= ye)
         return;
 
-    // Lock surface for direct pixel access if needed
     if (SDL_MUSTLOCK(surface))
     {
         SDL_LockSurface(surface);
     }
 
-    // Copy image data line by line to surface
-    uint8_t *dpixel = static_cast<uint8_t *>(surface->pixels);
-    dpixel += y * surface->pitch + x;
-
-    for (int i = 0; i < ye - y1; i++)
+    const int width = xe - x1;
+    const int height = ye - y1;
+    uint8_t *base_pixel = static_cast<uint8_t *>(surface->pixels) + y * surface->pitch + x;
+    const int dst_pitch = surface->pitch;
+        
+    for (int i = 0; i < height; i++)
     {
-        std::memcpy(dpixel, im->scan_line(y1 + i) + x1, xe - x1);
-        dpixel += surface->pitch;
+        const uint8_t *src = im->scan_line(y1 + i) + x1;
+        uint8_t *dst = base_pixel + i * dst_pitch;
+        std::memcpy(dst, src, width);
     }
 
     if (SDL_MUSTLOCK(surface))
