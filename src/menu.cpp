@@ -610,8 +610,8 @@ ico_button *make_default_buttons(int x, int &y, ico_button *append_list)
   }
 
   // credits in full version
-  ico_button *sell = load_icon(2, ID_SHOW_SELL, x, y, h, NULL, "ic_sell");
-  y += h;
+  // ico_button *sell = load_icon(2, ID_SHOW_SELL, x, y, h, NULL, "ic_sell");
+  // y += h;
 
   ico_button *quit = load_icon(6, ID_QUIT, x, y, h, NULL, "ic_quit");
   y += h;
@@ -630,12 +630,10 @@ ico_button *make_default_buttons(int x, int &y, ico_button *append_list)
   if (prot)
   {
     volume->next = multiplayer;
-    multiplayer->next = sell;
+    multiplayer->next = quit;
   }
   else
-    volume->next = sell;
-
-  sell->next = quit;
+    volume->next = quit;  
 
   ico_button *list = append_list;
 
@@ -693,7 +691,7 @@ void main_menu()
 	int button_w = 32;
 	int button_h = 25;
 	int padding_x = 1;
-	int move_up = 6;//6 menu buttons buttons by default
+	int move_up = 5;//5 menu buttons buttons by default
 
 	if(current_level) move_up++;
 	if(show_load_icon()) move_up++;
