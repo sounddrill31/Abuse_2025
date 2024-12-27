@@ -25,7 +25,6 @@
 #include "lisp.h"
 #include "video.h"
 #include "dprint.h"
-#include "lcache.h"
 #include "status.h"
 #include "game.h"
 #include "lisp_gc.h"
@@ -34,7 +33,7 @@
 #include "crc.h"
 #include "dev.h"
 #include "specache.h"
-#include "netface.h"
+#include "net/netface.h"
 
 #define touch(x) { (x)->last_access=last_access++; \
            if ((x)->last_access<0) { normalize(); (x)->last_access=1; } }

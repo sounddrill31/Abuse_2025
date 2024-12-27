@@ -27,7 +27,6 @@
 #include "netcfg.h"
 #include "gclient.h"
 #include "netface.h"
-#include "undrv.h"
 #include "timing.h"
 
 extern base_memory_struct *base;

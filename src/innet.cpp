@@ -22,7 +22,7 @@
 #include "game.h"
 #include "dev.h"
 #include "timing.h"
-#include "netface.h"
+#include "net/netface.h"
 
 #if HAVE_NETWORK
 #include "fileman.h"
