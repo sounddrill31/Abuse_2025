@@ -35,8 +35,7 @@ add_executable(abuse
     compiled.cpp compiled.h
     ant.cpp ant.h
     sensor.cpp
-    demo.cpp demo.h
-    lcache.cpp lcache.h
+    demo.cpp demo.h    
     nfclient.cpp nfclient.h
     clisp.cpp clisp.h
     gui.cpp gui.h

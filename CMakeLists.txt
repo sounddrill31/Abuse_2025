@@ -7,7 +7,7 @@ set(abuse_VERSION_MINOR 1)
 set(abuse_VERSION_PATCH 0)
 set(abuse_VERSION_TWEAK 0)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -46,7 +46,7 @@ set(HAVE_NETWORK TRUE CACHE BOOL "Enable networking support")
 if(TCPIP_DEBUG)
     add_compile_definitions(TCPIP_DEBUG)
 endif()
-
+        
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 if(WIN32)
