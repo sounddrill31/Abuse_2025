@@ -13,8 +13,6 @@
 #ifndef __NETFACE_HPP_
 #define __NETFACE_HPP_
 
-#include <SDL_config.h> //AR (#include <SDL_config.h>)
-
 #define PACKET_MAX_SIZE 1024  // this is a game data packet (udp/ipx)
 #define READ_PACKET_SIZE 1024 // this is a file service packet (tcp/spx)
 #define NET_CRC_FILENAME "#net_crc"
@@ -115,39 +113,39 @@ struct join_struct
 struct net_packet
 {
   uint8_t data[PACKET_MAX_SIZE];
-  int packet_prefix_size() { return 5; } // 2 byte size, 2 byte check sum, 1 byte packet order
-  uint16_t packet_size()
+  static int packet_prefix_size() { return 5; } // 2 byte size, 2 byte check sum, 1 byte packet order
+  uint16_t packet_size() const
   {
     uint16_t size;
     memcpy(&size, data, sizeof(size));
     return lstl(size);
   }
-  uint8_t tick_received() { return data[4]; }
-  void set_tick_received(uint8_t x) { data[4] = x; }
+  uint8_t tick_received() const { return data[4]; }
+  void set_tick_received(const uint8_t x) { data[4] = x; }
   uint8_t *packet_data() { return data + packet_prefix_size(); }
-  uint16_t get_checksum()
+  uint16_t get_checksum() const
   {
-    uint16_t cs = *((uint16_t *)data + 1);
+    const uint16_t cs = *((uint16_t *)data + 1);
     return lstl(cs);
   }
   uint16_t calc_checksum()
   {
     *((uint16_t *)data + 1) = 0;
-    int size = packet_prefix_size() + packet_size();
+    const int size = packet_prefix_size() + packet_size();
     uint8_t c1 = 0, c2 = 0, *p = data;
     for (int i = 0; i < size; i++, p++)
     {
       c1 += *p;
       c2 += c1;
     }
-    uint16_t cs = ((((uint16_t)c1) << 8) | c2);
+    const uint16_t cs = (uint16_t)c1 << 8 | c2;
     *((uint16_t *)data + 1) = lstl(cs);
     return cs;
   }
 
   void packet_reset() { set_packet_size(0); } // 2 bytes for size, 1 byte for tick
 
-  void add_to_packet(void *buf, int size)
+  void add_to_packet(const void *buf, const int size)
   {
     if (size && size + packet_size() + packet_prefix_size() < PACKET_MAX_SIZE)
     {
@@ -155,7 +153,7 @@ struct net_packet
       set_packet_size(packet_size() + size);
     }
   }
-  void write_uint8(uint8_t x) { add_to_packet(&x, 1); }
+  void write_uint8(const uint8_t x) { add_to_packet(&x, 1); }
   void write_uint16(uint16_t x)
   {
     x = lstl(x);
@@ -167,9 +165,9 @@ struct net_packet
     add_to_packet(&x, 4);
   }
 
-  void set_packet_size(uint16_t x)
+  void set_packet_size(const uint16_t x)
   {
-    uint16_t tmp = lstl(x);
+    const uint16_t tmp = lstl(x);
     memcpy(data, &tmp, sizeof(tmp));
   }
 };
