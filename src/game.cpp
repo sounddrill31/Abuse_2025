@@ -77,14 +77,11 @@
 #include <SDL_timer.h>
 //
 
-#define SHIFT_RIGHT_DEFAULT 0
-#define SHIFT_DOWN_DEFAULT 30
-
 extern CrcManager *net_crcs;
 
 Game *the_game = NULL;
 WindowManager *wm = NULL;
-int dev, shift_down = SHIFT_DOWN_DEFAULT, shift_right = SHIFT_RIGHT_DEFAULT;
+int dev;
 double sum_diffs = 1, total_diffs = 12;
 int total_active = 0;
 int32_t map_xoff = 0, map_yoff = 0;
