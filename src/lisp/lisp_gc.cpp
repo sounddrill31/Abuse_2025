@@ -159,6 +159,10 @@ LObject *Lisp::CollectObject(LObject *x)
     }
     else if ((uint8_t *)x < collected_start || (uint8_t *)x >= collected_end)
     {
+        return x;
+    }
+    else
+    {
         // Still need to remap cons_cells lying outside of space, for
         // instance on the stack.
         for (LObject *cell = NULL; x; cell = x, x = CDR(x))
