@@ -79,7 +79,7 @@ EventHandler::EventHandler(image *screen, palette *pal)
 //
 EventHandler::~EventHandler()
 {
-    ;
+    delete m_sprite;
 }
 
 void EventHandler::Get(Event &ev)

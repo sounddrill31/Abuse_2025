@@ -2145,7 +2145,10 @@ Game::~Game()
   delete color_table;
   delete wm;
   delete game_font;
-  delete big_font;
+  delete big_font;  
+  delete ar_big_font;
+  delete save_game_font;
+  delete ar_small_font;
   delete console_font;
   if(total_help_screens)
     free(help_screens);

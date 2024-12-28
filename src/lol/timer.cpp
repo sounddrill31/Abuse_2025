@@ -132,7 +132,10 @@ Timer::Timer()
 {
 }
 
-Timer::~Timer() = default;
+Timer::~Timer()
+{
+    delete data;
+}
 
 float Timer::GetMs()
 {
