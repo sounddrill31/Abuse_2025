@@ -384,7 +384,7 @@ void scroller::scroll_event(int newx, image *screen)
   if (vert) { xa=0; ya=30; yo=m_pos.x+5; yo=m_pos.y+5; } else { xa=30; ya=0; xo=m_pos.x+5; yo=m_pos.y+5; }
   for (int i=newx,c=0; c<30 && i<100; i++,c++)
   {
-    char st[10];
+    char st[12]; // 10 digits max + null terminator
     sprintf(st,"%d",i);
     wm->font()->PutString(screen, ivec2(xo, yo), st, wm->bright_color());
     xo+=xa; yo+=ya;

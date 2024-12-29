@@ -1027,7 +1027,7 @@ void *score_draw()
     qsort(sorted_players,tp,sizeof(view *),compare_players);
 
     ivec2 pos = local->m_aa;
-    char msg[100];
+    char msg[200];
 
     int i;
     for (i=0; i<tp; i++)

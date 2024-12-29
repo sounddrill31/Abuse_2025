@@ -1019,7 +1019,7 @@ void *l_caller(long number, void *args)
     } break;
     case 64 :
     {
-      char name[256],name2[256];
+      char name[512],name2[512];
       strcpy(name,lstring_value(CAR(args)->Eval()));  args=CDR(args);
       long first=lnumber_value(CAR(args)->Eval());  args=CDR(args);
       long last=lnumber_value(CAR(args)->Eval());

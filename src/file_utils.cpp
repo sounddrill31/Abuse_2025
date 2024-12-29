@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <string>
 #include <iostream>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include <cstring> // for strcpy, strchr
 
 static char *filename_prefix = nullptr;

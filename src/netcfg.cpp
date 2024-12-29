@@ -218,7 +218,7 @@ int net_configuration::confirm_inputs(InputManager *i, int server)
   bFILE *fp = open_file("addon/deathmat/username.lsp", "wb");
   if (!fp->open_failure())
   {
-    char str[100];
+    char str[200];
     sprintf(str, "(setq username \"%s\")\n", name);
     fp->write(str, strlen(str) + 1);
   }

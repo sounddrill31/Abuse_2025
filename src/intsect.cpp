@@ -13,6 +13,7 @@
 #endif
 
 #include <stdlib.h>
+#include <cstdint>     // for int32_t
 #include <SDL_config.h>//AR (#include <SDL_config.h>)
 
 void pushback(int32_t x1,int32_t y1,int32_t &x2,int32_t &y2,

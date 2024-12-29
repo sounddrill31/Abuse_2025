@@ -1055,7 +1055,7 @@ void dev_controll::load_stuff()
 
 void dev_controll::do_command(char const *command, Event &ev)
 {
-  char fword[50];
+  char fword[150];
   char const *st;
   int l,h,x,y,i;
   if (command[0]=='(')            // is this a lisp command?
