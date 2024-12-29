@@ -524,12 +524,20 @@ double bFILE::read_double()
 
 spec_directory::~spec_directory()
 {
-
-  if (total)
+  if (entries)
   {
-    free(data);
+    // Delete all entries before freeing the array
+    for (int i = 0; i < total; i++)
+    {
+      if (entries[i])
+        delete entries[i];
+    }
+    
     free(entries);
+    entries = nullptr;
   }
+  total = 0;
+  size = 0;
 }
 
 void spec_directory::FullyLoad(bFILE *fp)
@@ -650,61 +658,59 @@ void spec_directory::print()
     (*se)->Print();
 }
 
-
 void spec_directory::startup(bFILE *fp)
 {
   char buf[256];
-  memset(buf,0,256);
-  fp->read(buf,8);
-  buf[9]=0;
-  size=0;
-  if (!strcmp(buf,SPEC_SIGNATURE))
+  memset(buf, 0, 256);
+  fp->read(buf, 8);
+  buf[9] = 0;
+  size = 0;
+
+  if (!strcmp(buf, SPEC_SIGNATURE))
   {
-    total=fp->read_uint16();
-    entries=(spec_entry **)malloc(sizeof(spec_entry *)*total);
-    long start=fp->tell();
+    total = fp->read_uint16();
+    entries = (spec_entry **)malloc(sizeof(spec_entry *) * total);
+    long start = fp->tell();
 
-    int i;
-    for (i=0; i<total; i++)
+    // First pass - get sizes
+    for (int i = 0; i < total; i++)
     {
-      fp->read(buf,2);
-      long entry_size=sizeof(spec_entry)+(unsigned char)buf[1];
-      entry_size=(entry_size+3)&(~3);
-      fp->read(buf,(unsigned char)buf[1]);
-      fp->read(buf,9);
-
-      size+=entry_size;
+      fp->read(buf, 2);
+      int name_len = (unsigned char)buf[1];
+      fp->read(buf, name_len); // Read name
+      fp->read(buf, 9);        // Read flags and size info
     }
-    data=malloc(size);
-    char *dp=(char *)data;
-    fp->seek(start,SEEK_SET);
-    for (i=0; i<total; i++)
+
+    // Second pass - create entries
+    fp->seek(start, SEEK_SET);
+    for (int i = 0; i < total; i++)
     {
-      spec_entry *se=(spec_entry *)dp;
-      entries[i]=se;
+      unsigned char type, len, flags;
+      fp->read(&type, 1);
+      fp->read(&len, 1);
 
-      unsigned char len,flags,type;
-      fp->read(&type,1);
-      fp->read(&len,1);
-      se->type=type;
-      se->data = NULL;
-      se->name=dp+sizeof(spec_entry);
-      fp->read(se->name,len);
-      fp->read(&flags,1);
+      // Read the name
+      char *name = (char *)malloc(len + 1);
+      fp->read(name, len);
+      name[len] = 0;
 
-      se->size=fp->read_uint32();
-      se->offset=fp->read_uint32();
-      dp+=((sizeof(spec_entry)+len)+3)&(~3);
+      fp->read(&flags, 1);
+      uint32_t entry_size = fp->read_uint32();
+      uint32_t entry_offset = fp->read_uint32();
+
+      // Create entry on heap
+      entries[i] = new spec_entry(type, name, NULL, entry_size, entry_offset);
+
+      free(name);
     }
   }
   else
   {
-    total=0;
-    data=NULL;
-    entries=NULL;
+    total = 0;
+    data = NULL;
+    entries = NULL;
   }
 }
-
 
 spec_directory::spec_directory(bFILE *fp)
 { startup(fp); }
