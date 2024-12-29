@@ -680,69 +680,78 @@ ico_button *make_conditional_buttons(int x, int &y)
 
 void main_menu()
 {
-	//AR enabled button selection with a controller, enabled highres button images
+  // AR enabled button selection with a controller, enabled highres button images
+  // AR let me know we are stuck here
+  the_game->ar_stateold = the_game->ar_state;
+  the_game->ar_state = AR_MAINMENU;
 
-	//AR let me know we are stuck here
-	the_game->ar_stateold = the_game->ar_state;
-	the_game->ar_state = AR_MAINMENU;
-	//
-	
-	//default button size 32x25, hires size 50x39
-	int button_w = 32;
-	int button_h = 25;
-	int padding_x = 1;
-	int move_up = 5;//5 menu buttons buttons by default
+  // default button size 32x25, hires size 50x39
+  int button_w = 32;
+  int button_h = 25;
+  int padding_x = 1;
 
-	if(current_level) move_up++;
-	if(show_load_icon()) move_up++;
-	if(prot) move_up++;//multiplayer button
+  // Calculate total number of buttons
+  int total_buttons = 5; // Start, Difficulty, Gamma, Volume, Quit
 
-	if(settings.hires)
-	{
-		button_w = 50;
-		button_h = 39;
-		padding_x = 2;
-		move_up *= 39;		
-	}
-	else move_up *= 25;
+  // Remove difficulty button if we're in multiplayer server/client mode
+  if (main_net_cfg && (main_net_cfg->state == net_configuration::SERVER ||
+                       main_net_cfg->state == net_configuration::CLIENT))
+  {
+    total_buttons--;
+  }
 
-	move_up /= 2;
-	
-    int y = yres/2 - move_up;
-	int x = xres - button_w - padding_x;
+  // Add conditional buttons
+  if (current_level) total_buttons++; // Return button
+  if (show_load_icon()) total_buttons++; // Load button
+  if (prot) total_buttons++; // Multiplayer button
 
-    ico_button *list = make_conditional_buttons(x,y);
-    list = make_default_buttons(x,y,list);
+  if (settings.hires)
+  {
+    button_w = 50;
+    button_h = 39;
+    padding_x = 2;
+  }
 
-	//AR controller ui movement
-	int mx, my;//mouse position
-	int border_up = yres/2 - move_up;
-	int border_down = y;
+  // Calculate total menu height and center position
+  int total_height = total_buttons * button_h;
+  int y = (yres - total_height) / 2;
+  int x = xres - button_w - padding_x;
 
-	int old_mx = wm->GetMousePos().x;
-	int old_my = wm->GetMousePos().y;
+  // Store original y for border calculations
+  int original_y = y;
 
-	//AR initial position of the mouse in the menu for controller use
-	if(settings.ctr_aim)
-	{
-		mx = x + button_w/2;
-		my = border_up + button_h/2;
-		wm->SetMousePos(ivec2(mx,my));
-	}
-	//
-	
-	InputManager *inm=new InputManager(main_screen,list);
-    inm->allow_no_selections();
-    inm->clear_current();
+  ico_button *list = make_conditional_buttons(x, y);
+  list = make_default_buttons(x, y, list);
 
-    main_screen->AddDirty(ivec2(0), ivec2(320, 200));
+  // AR controller ui movement
+  int mx, my;                 // mouse position
+  int border_up = original_y; // Changed to use the initial y position
+  int border_down = y;
 
-    Event ev;
+  int old_mx = wm->GetMousePos().x;
+  int old_my = wm->GetMousePos().y;
 
-    int stop_menu=0;
-    time_marker start;
-    wm->flush_screen();
-    do
+  // AR initial position of the mouse in the menu for controller use
+  if (settings.ctr_aim)
+  {
+    mx = x + button_w / 2;
+    my = border_up + button_h / 2;
+    wm->SetMousePos(ivec2(mx, my));
+  }
+
+  InputManager *inm = new InputManager(main_screen, list);
+  inm->allow_no_selections();
+  inm->clear_current();
+
+  main_screen->AddDirty(ivec2(0), ivec2(320, 200));
+
+  Event ev;
+  int stop_menu = 0;
+  time_marker start;
+  wm->flush_screen();
+  
+  
+  do
 	{
         time_marker new_time;
 
