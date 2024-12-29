@@ -431,12 +431,13 @@ int game_server::process_net()
     if (c->comm->error() || (c->comm->ready_to_read() && !process_client_command(c)))
     {
       DEBUG_LOG("Communication error with client %d, marking for deletion", c->client_id);
-      c->set_delete_me(1);
-      check_collection_complete();
+      c->set_delete_me(1);    
     }
     else
       ret = 1;
   }
+  
+  check_collection_complete();
 
   return 1;
 }
