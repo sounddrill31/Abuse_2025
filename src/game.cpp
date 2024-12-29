@@ -3,6 +3,7 @@
  *  Copyright (c) 1995 Crack dot Com
  *  Copyright (c) 2005-2011 Sam Hocevar <sam@hocevar.net>
  *  Copyright (c) 2016 Antonio Radojkovic <antonior.software@gmail.com>
+ *  Copyright (c) 2024 Andrej Pancik
  *
  *  This software was released into the Public Domain. As with most public
  *  domain software, no warranty is made or implied by Crack dot Com, by
@@ -2474,10 +2475,10 @@ int main(int argc, char *argv[])
       g->update_screen(); // redraw the screen with any changes
     }
 
-    Uint32 ar_lastupdate = 0;
+    Uint32 ar_lastupdate = SDL_GetTicks();
     float ar_bullettime = 0.0f;
     Uint32 ar_bt_timer = 0;
-
+    
     while (!g->done())
     {
       music_check();
@@ -2506,41 +2507,50 @@ int main(int argc, char *argv[])
 
       // if (demo_man.current_state() != demo_manager::PLAYING)
       g->get_input();
+      
 
-      if (demo_man.current_state() == demo_manager::NORMAL)
-        net_send();
-      else
-        demo_man.do_inputs();
+      // process all the objects in the world    
+      if (SDL_GetTicks() - ar_lastupdate >= (settings.physics_update + ar_bullettime * settings.physics_update))
+      {
+        // AR update game at custom framerate, original is 15 FPS, physics are locked at 15 FPS      
+        if (demo_man.current_state() == demo_manager::NORMAL)
+          net_send();
+        else
+          demo_man.do_inputs();
 
-      service_net_request();
+        service_net_request();
 
-      //AR bullet time
-			if(settings.bullet_time)
-			{
-				if(SDL_GetTicks()-ar_bt_timer>50)
-				{
-					ar_bullettime += 0.15;
-					ar_bt_timer = SDL_GetTicks();
-				}
-				if(ar_bullettime>settings.bullet_time_add) ar_bullettime = settings.bullet_time_add;
-			}
-			else
-			{
-				if(SDL_GetTicks()-ar_bt_timer>50)
-				{
-					ar_bullettime -= 0.15;
-					ar_bt_timer = SDL_GetTicks();
-				}
-				if(ar_bullettime<0) ar_bullettime = 0;
-			}
-
-      // process all the objects in the world
-      g->step();
-      g->calc_speed();
+        // AR bullet time
+        if (settings.bullet_time)
+        {
+          if (SDL_GetTicks() - ar_bt_timer > 50)
+          {
+            ar_bullettime += 0.15;
+            ar_bt_timer = SDL_GetTicks();
+          }
+          if (ar_bullettime > settings.bullet_time_add)
+            ar_bullettime = settings.bullet_time_add;
+        }
+        else
+        {
+          if (SDL_GetTicks() - ar_bt_timer > 50)
+          {
+            ar_bullettime -= 0.15;
+            ar_bt_timer = SDL_GetTicks();
+          }
+          if (ar_bullettime < 0)
+            ar_bullettime = 0;
+        }
+        
+        ar_lastupdate = SDL_GetTicks();
+        g->step();
+      }
 
       // see if a request for a level load was made during the last tick
       if (!req_name[0])
         g->update_screen(); // redraw the screen with any changes
+        
+      SDL_Delay(1);
     }
 
     net_uninit();
@@ -2550,7 +2560,11 @@ int main(int argc, char *argv[])
     delete net_crcs;
     net_crcs = NULL;
 
-    delete chat;
+    if (chat)
+    {
+      delete chat;
+      chat = nullptr;
+    }
 
     Timer tmp;
     tmp.WaitMs(500);

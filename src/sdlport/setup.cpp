@@ -117,7 +117,7 @@ Settings::Settings()
 	this->local_save = true;
 	this->grab_input = false;	 // don't grab the input
 	this->editor = false;			 // disable editor mode
-	this->physics_update = 65; // original 65ms/15 FPS
+	this->physics_update = 1000 / 15; // original 65ms/15 FPS
 	this->mouse_scale = 0;		 // match desktop
 	this->big_font = false;
 	this->language = "english";
