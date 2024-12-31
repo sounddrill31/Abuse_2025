@@ -136,12 +136,13 @@ int unix_fd::write(void const *buf, int size, net_address *addr)
 
 int unix_fd::read(void *buf, int size, net_address **addr)
 {
+  int tr = 0;
 #ifdef WIN32
-  int tr = recv(fd, (char *)buf, size, 0);
+  tr = recv(fd, (char *)buf, size, 0);
 #else
-  int tr = ::read(fd, buf, size);
+  tr = ::read(fd, buf, size);
 #endif
-  net_log("unix_fd::read:", buf, size);
+  net_log("unix_fd::read:", buf, tr);
   if (addr)
     *addr = nullptr;
   return tr;
