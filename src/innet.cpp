@@ -339,7 +339,7 @@ int NF_set_file_server(char const *name)
 
 int NF_open_file(char const *filename, char const *mode)
 {
-  DEBUG_LOG("Opening network file: %s mode: %s", filename, mode);
+  // DEBUG_LOG("Opening network file: %s mode: %s", filename, mode);
   if (prot)
     return fman->rf_open_file(filename, mode);
   return -2;

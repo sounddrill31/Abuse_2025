@@ -2247,9 +2247,6 @@ int level::save(char const *filename, int save_all)
                 }
             }
             delete bk;
-#if (defined(__MACH__) || !defined(__APPLE__)) && (!defined(WIN32))
-            chmod( "levsave.bak", S_IRWXU | S_IRWXG | S_IRWXO );
-#endif
         }
         delete fp;
     }
