@@ -888,8 +888,6 @@ int become_server(char *name)
   DEBUG_LOG("Attempting to become server: %s", name);
   if (prot && main_net_cfg)
   {
-    delete game_face;
-
     if (comm_sock)
       delete comm_sock;
 
@@ -923,6 +921,7 @@ int become_server(char *name)
     game_sock->read_selectable();
 
     DEBUG_LOG("Creating game server handler");
+    delete game_face;
     game_face = new game_server;
     local_client_number = 0;
     return 1;
