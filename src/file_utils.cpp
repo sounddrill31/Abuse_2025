@@ -96,6 +96,13 @@ FILE *prefix_fopen(const char *filename, const char *mode) {
         // For write/append modes, always try save prefix first
         if (is_write && save_filename_prefix) {
             const std::string path = combine_paths(save_filename_prefix, filename);
+            // Create directories if writing
+            if (is_write) {
+                std::filesystem::path filepath(path);
+                if (filepath.has_parent_path()) {
+                    std::filesystem::create_directories(filepath.parent_path());
+                }
+            }
             fp = fopen(path.c_str(), mode);
             if (fp) {
                 // std::cerr << "prefix_fopen: opened for writing: " << path << std::endl;
@@ -118,19 +125,21 @@ FILE *prefix_fopen(const char *filename, const char *mode) {
                 const std::string path = combine_paths(filename_prefix, filename);
                 fp = fopen(path.c_str(), mode);
                 if (fp) {
-                    // std::cerr << "prefix_fopen: opened for reading (data): " << path << std::endl;
                     return fp;
                 }
             }
         }
 
         // Fall back to direct file open
-        fp = fopen(filename, mode);
-        if (fp) {
-            // std::cerr << "prefix_fopen: opened directly: " << filename << std::endl;
-        } else {
-            // std::cerr << "prefix_fopen: failed to open: " << filename << std::endl;
+        // Create directories for direct path if writing
+        if (is_write) {
+            std::filesystem::path filepath(filename);
+            if (filepath.has_parent_path()) {
+                std::filesystem::create_directories(filepath.parent_path());
+            }
         }
+        fp = fopen(filename, mode);
+        
         return fp;
     } catch (const std::exception &e) {
         std::cerr << "prefix_fopen error: " << e.what() << std::endl;
@@ -156,6 +165,13 @@ int prefix_open(const char *filename, const int flags, const mode_t mode) {
         // For write modes, always try save prefix first
         if (is_write && save_filename_prefix) {
             const std::string path = combine_paths(save_filename_prefix, filename);
+            // Create directories if writing
+            if (is_write) {
+                std::filesystem::path filepath(path);
+                if (filepath.has_parent_path()) {
+                    std::filesystem::create_directories(filepath.parent_path());
+                }
+            }
             fd = open(path.c_str(), flags, mode);
             if (fd != -1) {
                 return fd;
@@ -182,6 +198,13 @@ int prefix_open(const char *filename, const int flags, const mode_t mode) {
         }
 
         // Fall back to direct file open
+        // Create directories for direct path if writing
+        if (is_write) {
+            std::filesystem::path filepath(filename);
+            if (filepath.has_parent_path()) {
+                std::filesystem::create_directories(filepath.parent_path());
+            }
+        }
         return open(filename, flags, mode);
     } catch (const std::exception &e) {
         std::cerr << "prefix_open error: " << e.what() << std::endl;
