@@ -885,7 +885,7 @@ void view::set_input(int cx, int cy, int b1, int b2, int b3, int b4, int px, int
 
 
 void view::reset_player()
-{
+{ 
   if (m_focus)
   {
 
@@ -1088,7 +1088,12 @@ int32_t view::set_view_var_value(int num, int32_t x)
     case V_SHIFT_DOWN : m_shift.y = x; break;
     case V_SHIFT_RIGHT : m_shift.x = x; break;
     case V_GOD : god=x; break;
-    case V_PLAYER_NUMBER : { player_number=x; if (local_player()) sbar.associate(this); }  break;
+    case V_PLAYER_NUMBER : {      
+      player_number=x;
+      if (local_player()) sbar.associate(this);
+      set_tint(x);
+    }
+    break;
 
     case V_DRAW_SOLID : draw_solid=x; break;
     case V_CURRENT_WEAPON : { current_weapon=x; sbar.need_refresh(); } break;
