@@ -683,8 +683,9 @@ void *cop_mover(int xm, int ym, int but)
 			// call the user function to reset the player
 			((LSymbol *)l_restart_player)->EvalFunction(NULL);
 			o->controller()->reset_player();
-			o->set_aistate(0);
-		}
+      o->controller()->reset_keymap();
+      o->set_aistate(0);
+    }
 		else if(o->controller() && o->controller()->local_player())
 			the_game->show_help(symbol_str("space_cont"));
 
