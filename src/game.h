@@ -84,7 +84,7 @@ private:
   int32_t last_time,fps;
   char mapname[100],command[200],help_text[200];
   int refresh,mousex,mousey,help_text_frames;
-  int has_joystick,no_delay;
+  int has_joystick;
 
 
   Jwindow *top_menu,*joy_win,*last_input;
@@ -95,6 +95,7 @@ public :
 	JCFont *save_game_font;	//AR
 	JCFont *ar_small_font;	//AR
 	JCFont *ar_big_font;	//AR
+  int no_delay;
 
   int key_down(int key) { return keymap[key/8]&(1<<(key%8)); }
   //AR x=1 -> key pressed, x=0 key released

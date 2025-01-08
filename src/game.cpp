@@ -1338,19 +1338,10 @@ Game::Game(int argc, char **argv)
 
   help_text_frames = 0;
   strcpy(help_text, "");
-
-
-  for(i = 1; i < argc; i++)
-    if(!strcmp(argv[i], "-no_delay"))
-    {
-      no_delay = 1;
-      dprintf("Frame delay off (-nodelay)\n");
-    }
-
+  no_delay = 0;
 
   image_init();
   zoom = 15;
-  no_delay = 0;
 
   has_joystick = joy_init(argc, argv);
   dprintf("Joystick : ");
@@ -1508,7 +1499,7 @@ void Game::show_time()
         return;
 
     char str[16];
-    sprintf(str, "%ld", (long)(10000.0f / avg_ms));
+    sprintf(str, "%ld", (long)(1000.0f / avg_ms));
     console_font->PutString(main_screen, first_view->m_aa, str);
 
     sprintf(str, "%d", total_active);
@@ -1571,63 +1562,8 @@ void Game::update_screen()
 
 }
 
-int Game::calc_speed()
-{
-  static Uint32 last_tick = SDL_GetTicks();
-  static int first = 1;
-
-  // First call initializes timer
-  if (first)
-  {
-    first = 0;
-    return 0;
-  }
-
-  // Calculate frame timing
-  Uint32 current_tick = SDL_GetTicks();
-  Uint32 frame_time = current_tick - last_tick;
-
-  // Target frame times
-  const Uint32 EDIT_MODE_TARGET = 33; // 30 FPS
-  const Uint32 GAME_MODE_TARGET = 66; // 15 FPS
-  const Uint32 PANIC_THRESHOLD = 100; // 10 FPS
-
-  int ret = 0;
-
-  if (dev & EDIT_MODE)
-  {
-    // In edit mode, limit to 30 FPS
-    Uint32 target_tick = last_tick + EDIT_MODE_TARGET;
-    if (current_tick < target_tick && need_delay && !no_delay)
-    {
-      SDL_Delay(target_tick - current_tick);
-    }
-  }
-  else
-  {
-    // Normal game mode targeting 15 FPS
-    Uint32 target_tick = last_tick + GAME_MODE_TARGET;
-    if (current_tick < target_tick && need_delay)
-    {
-      frame_panic = 0;
-      if (!no_delay)
-      {
-        SDL_Delay(target_tick - current_tick);
-      }
-    }
-    else if (frame_time > PANIC_THRESHOLD)
-    {
-      // We're running too slow
-      massive_frame_panic++;
-      frame_panic++;
-      ret = 1;
-    }
-  }
-
-  // Store the target time rather than actual time
-  last_tick += (dev & EDIT_MODE) ? EDIT_MODE_TARGET : GAME_MODE_TARGET;
-
-  return ret;
+int Game::calc_speed(){
+  return 0;
 }
 
 extern int start_edit;
@@ -1890,41 +1826,36 @@ void Game::get_input()
     }
 }
 
-
 void net_send(int force = 0)
 {
-    // XXX: this was added to avoid crashing on the PS3.
-    if(!player_list)
-        return;
+  // XXX: this was added to avoid crashing on the PS3.
+  if (!player_list)
+    return;
 
-  if((!(dev & EDIT_MODE)) || force)
+  if ((!(dev & EDIT_MODE)) || force)
   {
-    if(demo_man.state == demo_manager::PLAYING)
+    if (demo_man.state == demo_manager::PLAYING)
     {
       base->input_state = INPUT_PROCESSING;
-    } else
+    }
+    else
     {
-
-
-
-      if(!player_list->m_focus)
+      if (!player_list->m_focus)
       {
-    dprintf("Players have not been created\ncall create_players");
-    exit(0);
+        dprintf("Players have not been created\ncall create_players");
+        exit(0);
       }
 
-
       view *p = player_list;
-      for(; p; p = p->next)
-        if(p->local_player())
-      p->get_input();
-
+      for (; p; p = p->next)
+        if (p->local_player())
+          p->get_input();
 
       base->packet.write_uint8(SCMD_SYNC);
       base->packet.write_uint16(make_sync());
 
-      if(base->join_list)
-      base->packet.write_uint8(SCMD_RELOAD);
+      if (base->join_list)
+        base->packet.write_uint8(SCMD_RELOAD);
 
       //      printf("save tick %d, pk size=%d, rand_on=%d, sync=%d\n", current_level->tick_counter(),
       //         base->packet.packet_size(), rand_on, make_sync());
@@ -1935,22 +1866,23 @@ void net_send(int force = 0)
 
 void net_receive()
 {
-  if(!(dev & EDIT_MODE) && current_level)
+  if (!(dev & EDIT_MODE) && current_level)
   {
     uint8_t buf[PACKET_MAX_SIZE + 1];
     int size;
 
-    if(demo_man.state == demo_manager::PLAYING)
+    if (demo_man.state == demo_manager::PLAYING)
     {
-      if(!demo_man.get_packet(buf, size))
+      if (!demo_man.get_packet(buf, size))
         size = 0;
       base->packet.packet_reset();
       base->mem_lock = 0;
-    } else
+    }
+    else
     {
       size = get_inputs_from_server(buf);
-      if(demo_man.state == demo_manager::RECORDING)
-    demo_man.save_packet(buf, size);
+      if (demo_man.state == demo_manager::RECORDING)
+        demo_man.save_packet(buf, size);
     }
 
     process_packet_commands(buf, size);
@@ -2439,17 +2371,16 @@ int main(int argc, char *argv[])
     game_net_init(argc, argv);
     Lisp::Init();
 
-		//AR start editor via config file, or if command line
-		if(settings.editor) AR_dev_init();
-		else dev_init(argc, argv);
-
+    // AR start editor via config file, or if command line
+    if (settings.editor)
+      AR_dev_init();
+    else
+      dev_init(argc, argv);
 
     Game *g = new Game(argc, argv);
 
     dev_cont = new dev_controll();
     dev_cont->load_stuff();
-
-    g->get_input(); // prime the net
 
     for (int i = 1; i + 1 < argc; i++)
     {
@@ -2468,19 +2399,23 @@ int main(int argc, char *argv[])
       wait_min_players();
 
     net_send(1);
-    if (net_start())
-    {
-      g->step(); // process all the objects in the world
-      g->calc_speed();
-      g->update_screen(); // redraw the screen with any changes
-    }
 
-    Uint32 ar_lastupdate = SDL_GetTicks();
-    float ar_bullettime = 0.0f;
-    Uint32 ar_bt_timer = 0;
-    
+    static Uint32 last_tick_start = SDL_GetTicks();
+    static Uint32 last_physics_tick_time = SDL_GetTicks();
+
+    const float target_frame_duration_ms = 1000.0f / 60.0f;
+
     while (!g->done())
     {
+      Uint32 tick_start = SDL_GetTicks();
+      Uint32 frame_duration_ms = tick_start - last_tick_start; // Calculate time since last frame
+
+      if (frame_duration_ms < target_frame_duration_ms && !g->no_delay)
+      {
+        SDL_Delay(target_frame_duration_ms - frame_duration_ms);
+        continue;
+      }
+
       music_check();
 
       if (req_end)
@@ -2494,9 +2429,6 @@ int main(int argc, char *argv[])
         req_end = 0;
       }
 
-      if (demo_man.current_state() == demo_manager::NORMAL)
-        net_receive();
-
       // see if a request for a level load was made during the last tick
       if (req_name[0])
       {
@@ -2505,52 +2437,69 @@ int main(int argc, char *argv[])
         g->draw(g->state == SCENE_STATE);
       }
 
-      // if (demo_man.current_state() != demo_manager::PLAYING)
-      g->get_input();
-      
+      Uint32 current_tick = SDL_GetTicks();
+      Uint32 physics_frame_time = current_tick - last_physics_tick_time;
+      bool physics_step = physics_frame_time >= settings.physics_update || g->no_delay; // if enough time has passed, we should do a physics step
 
-      // process all the objects in the world    
-      if (SDL_GetTicks() - ar_lastupdate >= (settings.physics_update + ar_bullettime * settings.physics_update))
+      if (physics_frame_time > 100)
       {
-        // AR update game at custom framerate, original is 15 FPS, physics are locked at 15 FPS      
+        // Frame panic detection - tracks loops that take too long (>100ms).
+        // Increments panic counters that trigger automatic disabling of CPU-intensive
+        // features (like lighting) to maintain playable performance.
+        massive_frame_panic++;
+        frame_panic++;
+      }
+      else
+      {
+        frame_panic = 0;
+        if (massive_frame_panic > 0)
+          massive_frame_panic--;
+      }
+
+      if (physics_step)
+      {
         if (demo_man.current_state() == demo_manager::NORMAL)
+        {
+          net_receive();
+        }
+      }
+
+      // TEMPORARY FIX FOR HIGH-FRAMERATE MULTIPLAYER COMPATIBILITY
+      // Certain inputs (e.g., pressing SPACEBAR to reset after death) modify the game's underlying state.
+      // In multiplayer mode, if the player is dead, we sync this with physics steps to ensure the server
+      // processes it correctly. It might have some second-order effects I don't understand yet.
+      //
+      // Optimally, we would separate mouse input and rendering from game steps and networking.
+      if (g->first_view->m_focus->aistate() == 3 || physics_step)
+        if (demo_man.current_state() != demo_manager::PLAYING)
+          g->get_input();
+
+      if (physics_step)
+      {
+        if (demo_man.current_state() == demo_manager::NORMAL)
+        {
           net_send();
+        }
         else
+        {
           demo_man.do_inputs();
+        }
 
         service_net_request();
 
-        // AR bullet time
-        if (settings.bullet_time)
-        {
-          if (SDL_GetTicks() - ar_bt_timer > 50)
-          {
-            ar_bullettime += 0.15;
-            ar_bt_timer = SDL_GetTicks();
-          }
-          if (ar_bullettime > settings.bullet_time_add)
-            ar_bullettime = settings.bullet_time_add;
-        }
-        else
-        {
-          if (SDL_GetTicks() - ar_bt_timer > 50)
-          {
-            ar_bullettime -= 0.15;
-            ar_bt_timer = SDL_GetTicks();
-          }
-          if (ar_bullettime < 0)
-            ar_bullettime = 0;
-        }
-        
-        ar_lastupdate = SDL_GetTicks();
+        // process all the objects in the world
         g->step();
+
+        last_physics_tick_time = tick_start;
       }
 
       // see if a request for a level load was made during the last tick
       if (!req_name[0])
         g->update_screen(); // redraw the screen with any changes
-        
-      SDL_Delay(1);
+      
+      avg_ms = (avg_ms * 0.9f) + (frame_duration_ms * 0.1f);
+
+      last_tick_start = tick_start;
     }
 
     net_uninit();
