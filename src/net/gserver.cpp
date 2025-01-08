@@ -199,8 +199,8 @@ void game_server::check_collection_complete()
       }
     }
 
-    base->input_state = INPUT_PROCESSING;
-    game_sock->read_unselectable();
+    base->input_state = INPUT_PROCESSING; // tell engine to start processing
+    game_sock->read_unselectable();       // don't listen to this socket until we are prepared to read next tick's game data
     waiting_server_input = 1;
     DEBUG_LOG("Processing state complete");
   }
@@ -213,14 +213,14 @@ void game_server::add_engine_input()
   waiting_server_input = 0;
   base->input_state = INPUT_COLLECTING;
   base->packet.set_tick_received(base->current_tick);
-  game_sock->read_selectable();
+  game_sock->read_selectable(); // we can listen for game data now that we have server input
   check_collection_complete();
 }
 
 // Add input from a client to the game state
 void game_server::add_client_input(char *buf, int size, player_client *c)
 {
-  if (c->wait_input())
+  if (c->wait_input()) // don't add if we already have it
   {
     DEBUG_LOG("Adding input from client %d, size %d bytes", c->client_id, size);
     base->packet.add_to_packet(buf, size);
@@ -282,6 +282,10 @@ int game_server::process_client_command(player_client *c)
       game_sock->write( /* server_game_state */ pack->data,
                                pack->packet_size() + pack->packet_prefix_size(),
                                c->data_address);
+    } else {
+      DEBUG_LOG("Tick not resent - requested:%d current:%d packet:%d last_packet:%d",
+                tick, base->current_tick, base->packet.tick_received(),
+                base->last_packet.tick_received());      
     }
     return 1;
   }
@@ -291,26 +295,22 @@ int game_server::process_client_command(player_client *c)
   {
     if (reload_state)
     {
-      DEBUG_LOG("Client %d requesting reload while reload in progress", c->client_id);
-      if (c->comm->write( /* server_reload_ack */ &cmd, 1) != 1)
-      {
-        DEBUG_LOG("Failed to acknowledge reload to client %d", c->client_id);
-        c->set_delete_me(1);
-        return 0;
-      }
+      DEBUG_LOG("Client %d requesting reload while reload in progress", c->client_id);      
     }
     else
     {
-      DEBUG_LOG("Client %d marked for reload start", c->client_id);
-      // Send acknowledgment even when not in reload state
-      if (c->comm->write( /* server_reload_ack */ &cmd, 1) != 1)
-      {
-        DEBUG_LOG("Failed to acknowledge reload to client %d", c->client_id);
-        c->set_delete_me(1);
-        return 0;
-      }
+      DEBUG_LOG("Client %d marked for reload start", c->client_id);      
       c->set_need_reload_start_ok(1);
     }
+
+    uint8_t ack = SRVCMD_RELOAD_START_OK;
+    if (c->comm->write(/* server_command */ &ack, 1) != 1)
+    {
+      DEBUG_LOG("Failed to acknowledge reload to client %d", c->client_id);
+      c->set_delete_me(1);
+      return 0;
+    }
+
     return 1;
   }
   break;
@@ -394,6 +394,12 @@ int game_server::process_net()
           else
           {
             DEBUG_LOG("Received data from unknown client");
+            fprintf(stderr, "received data from unknown client\n");
+            printf("from address ");
+            from->print();
+            printf(" first addr ");
+            player_list->data_address->print();
+            printf("\n");
           }
         }
         else
@@ -444,7 +450,7 @@ int game_server::process_net()
 
 int game_server::input_missing()
 {
-  DEBUG_LOG("Input missing check called");
+  DEBUG_LOG("Server requesting input resend");
   return 1;
 }
 
@@ -476,7 +482,9 @@ int game_server::end_reload(int disconnect)
   // Mark all clients as joined and clear reload state
   DEBUG_LOG("All clients finished reloading, marking as joined");
   for (c = player_list; c; c = c->next)
+  {
     c->set_has_joined(1);
+  }
   reload_state = 0;
 
   return 1;
@@ -492,11 +500,11 @@ int game_server::start_reload()
 
   for (; c; c = c->next)
   {
-    if (!c->delete_me() && c->need_reload_start_ok())
+    if (!c->delete_me() && c->need_reload_start_ok()) // if the client is already waiting for reload state to start, send ok
     {
       DEBUG_LOG("Sending reload start OK to waiting client %d", c->client_id);
-      uint8_t cmd = CLCMD_RELOAD_START;
-      if (c->comm->write( /* server_reload_ack */ &cmd, 1) != 1)
+      uint8_t cmd = SRVCMD_RELOAD_START_OK;
+      if (c->comm->write( /* server_command */ &cmd, 1) != 1)
       {
         DEBUG_LOG("Failed to send reload OK to client %d", c->client_id);
         c->set_delete_me(1);
@@ -542,13 +550,13 @@ int game_server::add_client(int type, net_socket *sock, net_address *from)
     {
       DEBUG_LOG("Rejecting client - server full (%d/%d players)",
                 total_players(), main_net_cfg->max_players);
-      uint8_t too_many = 2;
+      uint8_t too_many = SRVCMD_TOO_MANY;
       sock->write( /* server_registration_response */ &too_many, 1);
       return 0;
     }
 
     // Write registration confirmation
-    uint8_t reg = 1;
+    uint8_t reg = SRVCMD_REGISTRATION_OK;
     if (sock->write( /* server_registration_response */ &reg, 1) != 1)
     {
       DEBUG_LOG("Failed to send registration confirmation");

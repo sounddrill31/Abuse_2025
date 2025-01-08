@@ -252,7 +252,7 @@ void file_manager::add_nfs_client(net_socket *sock)
 {
   uint8_t size[2];
   char filename[300], mode[20], *mp;
-  if (sock->read( /* client_nfs_connect_info */ size, 2) != 2)
+  if (sock->read(/* client_nfs_connect_info */ size, 2) != 2) // read size 2 bytes, because command was parsed by service_net_request() in innet.cpp
   {
     delete sock;
     return;

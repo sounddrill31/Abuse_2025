@@ -216,7 +216,7 @@ int net_init(int argc, char **argv)
   return 1;
 }
 
-int net_start()
+int net_start() // is the game starting up off the net? (i.e. -net hostname)
 {
   DEBUG_LOG("Checking if game is starting from network: %d",
             (main_net_cfg && main_net_cfg->state == net_configuration::CLIENT));
@@ -434,7 +434,7 @@ void service_net_request()
             case CLIENT_LSF_WAITER:
             {
               DEBUG_LOG("LSF waiter client connected");
-              uint8_t len = strlen(lsf);
+              uint8_t len = strlen(lsf) + 1;
               new_sock->write( /* server_lsf_length */ &len, 1);
               new_sock->write( /* server_lsf_data */ lsf, len);
               delete new_sock;
@@ -556,7 +556,7 @@ int request_server_entry()
       return 0;
     }
 
-    if (reg == 2)
+    if (reg == SRVCMD_TOO_MANY)
     {
       DEBUG_LOG("Server full - max players reached");
       fprintf(stderr, "%s", symbol_str("max_players"));
@@ -564,12 +564,14 @@ int request_server_entry()
       return 0;
     }
 
-    if (!reg)
+    if (reg != SRVCMD_REGISTRATION_OK)
     {
       DEBUG_LOG("Server not registered");
       fprintf(stderr, "%s", symbol_str("server_not_reg"));
       delete sock;
       return 0;
+    } else {
+      DEBUG_LOG("Server registered successfully");
     }
 
     char uname[256];
@@ -635,7 +637,7 @@ void net_reload()
   DEBUG_LOG("Beginning network reload");
   if (prot)
   {
-    if (net_server)
+    if (net_server) // Client-side reload
     {
       DEBUG_LOG("Client-side reload");
       if (current_level)
@@ -667,7 +669,7 @@ void net_reload()
 
       reload_end();
     }
-    else if (current_level)
+    else if (current_level) // Server-side reload
     {
       DEBUG_LOG("Server-side reload");
       join_struct *join_list = base->join_list;
@@ -805,7 +807,6 @@ int get_inputs_from_server(unsigned char *buf)
 {
   if (prot && base->input_state != INPUT_PROCESSING)
   {
-    DEBUG_LOG("Waiting for input from server");
     time_marker start;
     int total_retry = 0;
     Jwindow *abort = NULL;

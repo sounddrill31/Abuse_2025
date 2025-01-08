@@ -865,7 +865,7 @@ void dev_controll::toggle_search_window()
     searchw_on = 0;
 }
 
-int open_owin=0,open_fwin=0,open_bwin=0,start_edit=0,start_nodelay=0,start_doubled=0,start_mem=0;
+int open_owin=0,open_fwin=0,open_bwin=0,start_edit=0,start_nodelay=0,start_doubled=0;
 
 
 int get_option(char const *name);
@@ -899,9 +899,7 @@ void dev_init(int argc, char **argv)
       // }
     }
     else if (!strcmp(argv[i],"-fwin"))
-      open_fwin=1;
-    else if (!strcmp(argv[i],"-show_mem"))
-      start_mem=1;
+      open_fwin=1;    
     else if (!strcmp(argv[i],"-bwin"))
       open_bwin=1;
     else if (!strcmp(argv[i],"-owin"))
@@ -930,7 +928,7 @@ void dev_init(int argc, char **argv)
   if (get_option("-no_autolight"))
     disable_autolight=0;
 
-  if ((get_option("-size") || get_option("-vmode")) && !start_edit)
+  if ((get_option("-size")) && !start_edit)
   {
     printf("%s\n",symbol_str("no_hirez"));
     exit(0);

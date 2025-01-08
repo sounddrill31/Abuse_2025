@@ -12,10 +12,6 @@
 #   include "config.h"
 #endif
 
-#if (defined(__MACH__) || !defined(__APPLE__))
-#include <sys/stat.h>
-#endif
-
 #include <string.h>
 #include <limits.h>
 #include <time.h>

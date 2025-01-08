@@ -640,6 +640,23 @@ net_address *tcpip_protocol::find_address(const int port, char *name)
     }
   }
 
+  // For debugging purposes always add localhost (127.0.0.1) as the first option
+  if (servers.empty() && returned.empty())
+  {
+    // Create localhost address
+    sockaddr_in localhost{};
+    localhost.sin_family = AF_INET;
+    localhost.sin_port = htons(port);
+    localhost.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // 127.0.0.1
+
+    // Add to servers list
+    auto *localhost_request = new RequestItem;
+    localhost_request->addr = new ip_address(&localhost);
+    strncpy(localhost_request->name, "Localhost", sizeof(localhost_request->name) - 1);
+    localhost_request->name[sizeof(localhost_request->name) - 1] = 0;
+    servers.insert(localhost_request);
+  }
+
   if (responder)
   {
     for (int i = 0; i < 5; i++)

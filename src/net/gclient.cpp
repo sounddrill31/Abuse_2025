@@ -47,9 +47,20 @@ int game_client::process_server_command()
     return 0;
   }
 
+  DEBUG_LOG("Received command %d from server", cmd);
+
   switch (cmd)
   {
-  case CLCMD_REQUEST_RESEND:
+
+  case SRVCMD_RELOAD_START_OK:
+  {
+    // I think this happens if the client joined the server that was already in an active game
+    DEBUG_LOG("Server confirmed reload start, moving on.");     
+    return 1;
+  }
+  break;
+
+  case SRVCMD_REQUEST_RESEND:
   {
     uint8_t tick;
     DEBUG_LOG("Server requested packet resend");
@@ -76,6 +87,10 @@ int game_client::process_server_command()
         while (now.diff_time(&start) < 3.0)
           now.get_time();
       }
+    }
+    else if (tick == base->last_packet.tick_received())
+    {
+      DEBUG_LOG("Resending last packet to server");
     }
     else
     {
@@ -201,6 +216,11 @@ int game_client::input_missing()
 // Add local input to be sent to server
 void game_client::add_engine_input()
 {
+  if (base->input_state == INPUT_RELOAD)
+  {
+    DEBUG_LOG("Skipping input collection - reload in progress");
+    return;
+  }
   DEBUG_LOG("Adding engine input for tick %d", base->current_tick);
 
   net_packet *pack = &base->packet;
