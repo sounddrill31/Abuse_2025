@@ -763,6 +763,11 @@ void main_menu()
             } while (ev.type==EV_MOUSE_MOVE && wm->IsPending());
             inm->handle_event(ev,NULL);
             if (ev.type==EV_KEY && ev.key==JK_ESC)
+              if (current_level)
+              {
+                the_game->set_state(RUN_STATE);
+              }
+              else
                 wm->Push(new Event(ID_QUIT,NULL));
 
             menu_handler(ev,inm);
