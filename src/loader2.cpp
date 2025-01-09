@@ -299,25 +299,30 @@ void load_data(int argc, char **argv)
     color_table=NULL;
     
     char const *lang = settings.language.c_str();
-  LSymbol *sym = LSymbol::FindOrCreate("current_language");
-  sym->SetValue(LString::Create(lang));
+    
+    // Temporarily switch to permanent space for the language string
+    LSpace *sp = LSpace::Current;
+    LSpace::Current = &LSpace::Perm;
+    LSymbol *sym = LSymbol::FindOrCreate("current_language");
+    sym->SetValue(LString::Create(lang));
+    LSpace::Current = sp;
 
-  // don't let them specify a startup file we are connect elsewhere
-  if (!net_start())
-  {
-    for (int i=1; i<argc; i++)
+    // don't let them specify a startup file we are connect elsewhere
+    if (!net_start())
     {
-      if (!strcmp(argv[i],"-lsf"))
+      for (int i = 1; i < argc; i++)
       {
-    i++;
-    strcpy(lsf,argv[i]);
+        if (!strcmp(argv[i], "-lsf"))
+        {
+          i++;
+          strcpy(lsf, argv[i]);
+        }
+        if (!strcmp(argv[i], "-a"))
+        {
+          i++;
+          snprintf(lsf, sizeof(lsf), "addon/%s/%s.lsp", argv[i], argv[i]);
+        }
       }
-      if (!strcmp(argv[i],"-a"))
-      {
-    i++;
-    snprintf(lsf, sizeof(lsf), "addon/%s/%s.lsp", argv[i], argv[i]);
-      }
-    }
   }
   else if (!get_remote_lsf(net_server,lsf))
   {
