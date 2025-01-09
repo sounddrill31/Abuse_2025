@@ -33,15 +33,21 @@
 //
 EventHandler::EventHandler(image *screen, palette *pal)
 {
-	//AR moved from event.h, increased from 5000 to 10000 because it didn't detect the release of left stick when moving
-	m_dead_zone = 10000;
-	m_right_stick_scale = 0x2000;
+    //AR moved from event.h, increased from 5000 to 10000 because it didn't detect the release of left stick when moving
+    m_dead_zone = 10000;
+    m_right_stick_scale = 0x2000;
     m_right_stick_player_scale = 0x400;
-	//
+    m_right_stick_x = -1; // Initialize to indicate mouse mode
+    m_right_stick_y = -1; // Initialize to indicate mouse mode
+    m_pending = 0;
+    last_key = 0;
+    m_ignore_wheel_events = false;
+    m_button = 0;
+    m_center = ivec2(0, 0);
+    //
 
     CHECK(screen && pal);
-    m_pending = 0;
-
+    
     m_screen = screen;
 
     // Mouse stuff
@@ -78,8 +84,9 @@ EventHandler::EventHandler(image *screen, palette *pal)
 // Destructor
 //
 EventHandler::~EventHandler()
-{
-    delete m_sprite;
+{    
+    if (m_sprite)
+        delete m_sprite;    
 }
 
 void EventHandler::Get(Event &ev)
