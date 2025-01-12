@@ -1,3 +1,24 @@
+# News for Abuse 2025
+
+Multiplayer
+- player tints
+- reenable networking GUI
+- name saving/loading
+
+Rendering
+- sharp scaling
+- high DPI screens support
+- widescreen support
+- window resizing
+- remove border from rendering
+
+Others
+- file handling refactor
+- MIDI soundfonts
+- compiles on Mac and Ubuntu
+- new macos icon
+- enable translations through config
+
 # News for Abuse 0.9a (2016)
 
 - AntonioR's fork of the Xenoveritas SDL2 version

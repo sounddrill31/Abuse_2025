@@ -3,6 +3,7 @@
  *  Copyright (c) 2001 Anthony Kruize <trandor@labyrinth.net.au>
  *  Copyright (c) 2005-2011 Sam Hocevar <sam@hocevar.net>
  *  Copyright (c) 2016 Antonio Radojkovic <antonior.software@gmail.com>
+ *  Copyright (c) 2024 Andrej Pancik
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
