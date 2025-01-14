@@ -3039,7 +3039,7 @@ LObject *LSymbol::EvalUserFunction(LList *arg_list)
 /* PtrRef check: OK */
 LObject *LObject::Eval()
 {
-    PtrRef ref1(this);
+    // PtrRef ref1(this);
 
     maxevaldepth = Max(maxevaldepth, ++evaldepth);
 
