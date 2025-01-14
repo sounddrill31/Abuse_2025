@@ -68,11 +68,15 @@ void handle_window_resize()
     SDL_GetWindowSize(window, &window_width, &window_height);
 
     float target_aspect = static_cast<float>(xres) / yres;
-    if (window_width != static_cast<int>(window_height * target_aspect))
-    {
+    float current_aspect = static_cast<float>(window_width) / window_height;
+
+    if (current_aspect > target_aspect)
         window_width = static_cast<int>(window_height * target_aspect);
+    else
+        window_height = static_cast<int>(window_width / target_aspect);
+
+    if(target_aspect != current_aspect)
         SDL_SetWindowSize(window, window_width, window_height);
-    }
 
     SDL_Rect viewport;
     SDL_RenderGetViewport(renderer, &viewport);
@@ -106,16 +110,13 @@ void set_mode(int argc, char **argv)
                 settings.screen_width = current_display.w;
                 settings.screen_height = current_display.h;
             }
-            else if (settings.screen_width != 0)
-            {
-                // Use user-defined screen dimensions
-                settings.screen_width = settings.screen_width;
-                settings.screen_height = (int)(settings.screen_width / ((float)current_display.w / current_display.h));
-            }
             else
             {
-                settings.screen_width = settings.virtual_width;
-                settings.screen_height = (int)(settings.virtual_width / ((float)current_display.w / current_display.h));
+                if (settings.screen_width == 0)
+                {
+                    settings.screen_width = settings.virtual_width;
+                }
+                settings.screen_height = (int)(settings.screen_width / ((float)current_display.w / current_display.h));
             }
         }
 
@@ -335,8 +336,7 @@ void put_part_image(image *im, int x, int y, int x1, int y1, int x2, int y2)
 //
 void palette::load()
 {
-    if (lastl)
-        delete lastl;
+    delete lastl;
     lastl = copy();
 
     // Force to only 256 colours
