@@ -18,6 +18,13 @@
 #include "tcpip.h"
 #include <cctype>
 
+#include <ifaddrs.h>
+#include <arpa/inet.h>
+#ifdef WIN32
+#include <iphlpapi.h>
+#pragma comment(lib, "iphlpapi.lib")
+#endif
+
 // Global instances
 static FILE *log_file = nullptr;
 extern int net_start();
@@ -269,34 +276,61 @@ net_address *tcpip_protocol::get_local_address()
       memcpy(&addr->addr.sin_addr, *l_hn->h_addr_list, 4);
       return addr;
     }
-    printf("Enter ip address: ");
-    if (!fgets(my_name, sizeof(my_name), stdin))
-    {
-      return nullptr;
-    }
   }
 
-  unsigned char tmp[4];
-  const char *np = my_name;
-  for (unsigned char &i : tmp)
+#ifdef WIN32
+  ULONG bufferSize = 15000;
+  PIP_ADAPTER_ADDRESSES adapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(bufferSize);
+
+  if (GetAdaptersAddresses(AF_INET, 0, nullptr, adapterAddresses, &bufferSize) == NO_ERROR)
   {
-    int num = 0;
-    while (*np && *np != '.')
+    for (PIP_ADAPTER_ADDRESSES adapter = adapterAddresses; adapter; adapter = adapter->Next)
     {
-      num = num * 10 + (*np - '0');
-      np++;
+      for (PIP_ADAPTER_UNICAST_ADDRESS unicast = adapter->FirstUnicastAddress; unicast; unicast = unicast->Next)
+      {
+        sockaddr_in *sa_in = (sockaddr_in *)unicast->Address.lpSockaddr;
+        if (sa_in->sin_addr.S_un.S_addr != INADDR_LOOPBACK)
+        {
+          auto *addr = new ip_address;
+          addr->addr = *sa_in;
+          free(adapterAddresses);
+          return addr;
+        }
+      }
     }
-    i = num;
-    if (*np == '.')
-      np++;
+  }
+  free(adapterAddresses);
+#else
+  struct ifaddrs *ifaddr, *ifa;
+  if (getifaddrs(&ifaddr) == -1)
+  {
+    return nullptr;
   }
 
-  sockaddr_in host{};
-  host.sin_family = AF_INET;
-  host.sin_addr.s_addr = htonl(INADDR_ANY);
-  memcpy(&host.sin_addr, tmp, sizeof(in_addr));
+  for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next)
+  {
+    if (ifa->ifa_addr == nullptr)
+    {
+      continue;
+    }
 
-  return new ip_address(&host);
+    if (ifa->ifa_addr->sa_family == AF_INET)
+    {
+      sockaddr_in *sa_in = (sockaddr_in *)ifa->ifa_addr;
+      if (sa_in->sin_addr.s_addr != htonl(INADDR_LOOPBACK))
+      {
+        auto *addr = new ip_address;
+        addr->addr = *sa_in;
+        printf("Local IP Address: %s\n", inet_ntoa(addr->addr.sin_addr));
+        freeifaddrs(ifaddr);
+        return addr;
+      }
+    }
+  }
+  freeifaddrs(ifaddr);
+#endif
+
+  return nullptr;
 }
 
 net_address *tcpip_protocol::get_node_address(char const *&server_name, int def_port, const int force_port)
@@ -641,21 +675,21 @@ net_address *tcpip_protocol::find_address(const int port, char *name)
   }
 
   // For debugging purposes always add localhost (127.0.0.1) as the first option
-  if (servers.empty() && returned.empty())
-  {
-    // Create localhost address
-    sockaddr_in localhost{};
-    localhost.sin_family = AF_INET;
-    localhost.sin_port = htons(port);
-    localhost.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // 127.0.0.1
+  // if (servers.empty() && returned.empty())
+  // {
+  //   // Create localhost address
+  //   sockaddr_in localhost{};
+  //   localhost.sin_family = AF_INET;
+  //   localhost.sin_port = htons(port);
+  //   localhost.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // 127.0.0.1
 
-    // Add to servers list
-    auto *localhost_request = new RequestItem;
-    localhost_request->addr = new ip_address(&localhost);
-    strncpy(localhost_request->name, "Localhost", sizeof(localhost_request->name) - 1);
-    localhost_request->name[sizeof(localhost_request->name) - 1] = 0;
-    servers.insert(localhost_request);
-  }
+  //   // Add to servers list
+  //   auto *localhost_request = new RequestItem;
+  //   localhost_request->addr = new ip_address(&localhost);
+  //   strncpy(localhost_request->name, "Localhost", sizeof(localhost_request->name) - 1);
+  //   localhost_request->name[sizeof(localhost_request->name) - 1] = 0;
+  //   servers.insert(localhost_request);
+  // }
 
   if (responder)
   {
