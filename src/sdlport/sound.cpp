@@ -155,24 +155,27 @@ sound_effect::sound_effect(char const *filename)
     if (!enabled)
         return;
 
-    const std::filesystem::path datadir = get_filename_prefix();
-    const std::filesystem::path full_path = datadir / filename;
-
-    // Create SDL_RWops directly from the file
-    SDL_RWops *rw = SDL_RWFromFile(full_path.c_str(), "rb");
-    if (!rw)
+    // Use prefix_fopen to get the file
+    FILE *file = prefix_fopen(filename, "rb");
+    if (!file)
     {
-        // Handle error if the file couldn't be opened
-        printf("Failed to open file %s: %s", full_path.c_str(), SDL_GetError());
+        printf("Failed to open file %s\n", filename);
         return;
     }
 
-    // Load the WAV data from the SDL_RWops
-    m_chunk = Mix_LoadWAV_RW(rw, 1); // 1 means SDL will free the RWops
+    // Create SDL_RWops from the FILE*
+    SDL_RWops *rw = SDL_RWFromFP(file, SDL_TRUE); // SDL_TRUE means SDL will close the file
+    if (!rw)
+    {
+        printf("Failed to create RWops for %s: %s\n", filename, SDL_GetError());
+        fclose(file);
+        return;
+    }
+
+    m_chunk = Mix_LoadWAV_RW(rw, SDL_TRUE); // 1 means SDL will free the RWops
     if (!m_chunk)
     {
-        // Handle error if loading fails
-        printf("Failed to load WAV from file %s: %s", full_path.c_str(), Mix_GetError());
+        printf("Failed to load WAV from file %s: %s\n", filename, Mix_GetError());
     }
 }
 
@@ -270,7 +273,7 @@ song::song(char const *filename)
         }
 
         // Load music using SDL_mixer
-        music = Mix_LoadMUS_RW(rw, 0); // 0 means don't free the rwops
+        music = Mix_LoadMUS_RW(rw, SDL_FALSE); // 0 means don't free the rwops
 
         if (!music)
         {
