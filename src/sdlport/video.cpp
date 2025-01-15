@@ -58,6 +58,35 @@ int yres = 0;
 extern palette *lastl;
 extern Settings settings;
 
+bool has_notch()
+{
+// Only proceed with detection on macOS
+#ifdef __APPLE__
+    SDL_Rect display_bounds;
+    SDL_Rect usable_bounds;
+
+    // Get the bounds of the main display (index 0)
+    if (SDL_GetDisplayBounds(0, &display_bounds) != 0 ||
+        SDL_GetDisplayUsableBounds(0, &usable_bounds) != 0)
+    {
+        return false; // Return false on error
+    }
+
+    // On MacBooks with notch:
+    // - display_bounds represents the full screen including the notch area
+    // - usable_bounds represents the screen excluding the notch area
+    // Therefore, if there's a notch:
+    // - The usable height will be less than display height
+    // - The usable width will equal the display width    
+    return (usable_bounds.h < display_bounds.h &&
+            usable_bounds.w == display_bounds.w &&
+            (display_bounds.h - usable_bounds.h) >= 32 &&
+            (display_bounds.h - usable_bounds.h) <= 37);
+#else
+    return false; // Not macOS, so definitely no notch
+#endif
+}
+
 //
 // Calculate mouse scaling factors and window aspect ratio
 // This needs to be exposed for event handling
@@ -98,17 +127,34 @@ void set_mode(int argc, char **argv)
         // Auto-detect screen dimensions if not specified in settings
         if (settings.screen_width == 0 || settings.screen_height == 0)
         {
-            SDL_DisplayMode current_display;
-            if (SDL_GetCurrentDisplayMode(0, &current_display) != 0)
-            {
-                throw std::runtime_error(SDL_GetError());
-            }
+            int display_width, display_height;
+            if(has_notch())
+            {                
+                SDL_Rect usable_bounds;
+                if (SDL_GetDisplayUsableBounds(0, &usable_bounds) != 0)
+                {
+                    throw std::runtime_error(SDL_GetError());
+                }
 
-            // Use full screen dimensions or virtual resolution adjusted for display's aspect ratio
+                display_width = usable_bounds.w;
+                display_height = usable_bounds.h;
+            }
+            else
+            {
+                SDL_DisplayMode display_mode;
+                if (SDL_GetCurrentDisplayMode(0, &display_mode) != 0)
+                {
+                    throw std::runtime_error(SDL_GetError());
+                }
+
+                display_width = display_mode.w;
+                display_height = display_mode.h;
+            }                        
+            
             if (settings.fullscreen)
             {
-                settings.screen_width = current_display.w;
-                settings.screen_height = current_display.h;
+                settings.screen_width = display_width;
+                settings.screen_height = display_height;
             }
             else
             {
@@ -116,13 +162,13 @@ void set_mode(int argc, char **argv)
                 {
                     settings.screen_width = settings.virtual_width;
                 }
-                settings.screen_height = (int)(settings.screen_width / ((float)current_display.w / current_display.h));
+                settings.screen_height = (int)(settings.screen_width * ((float)display_height / display_width));
             }
         }
 
         // Calculate virtual resolution preserving aspect ratio
         xres = settings.virtual_width;
-        yres = settings.virtual_height ? settings.virtual_height : (int)(xres / ((float)settings.screen_width / settings.screen_height));
+        yres = settings.virtual_height ? settings.virtual_height : (int)(xres * ((float)settings.screen_height / settings.screen_width));
 
         // Set up window flags based on display settings
         uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
