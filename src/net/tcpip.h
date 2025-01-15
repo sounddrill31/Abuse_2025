@@ -12,21 +12,43 @@
 
 // Platform-specific includes
 #ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <WinSock2.h> // Must come before Windows.h
 #include <Windows.h>
-typedef int socklen_t;
+#include <WS2tcpip.h> // For modern Windows Socket functions
+#include <iphlpapi.h> // For GetAdaptersAddresses
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "iphlpapi.lib")
 #else
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/select.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <ifaddrs.h>
 #endif
 
+// Common includes needed across all platforms
+#include <cstring>
+#include <cstdio>
+#include <cerrno>
 #include "sock.h"
 #include "isllist.h"
-#include <cstring>
+
+// Platform-specific type definitions and macros
+#ifdef WIN32
+typedef int socklen_t;
+#define SOCKET_ERROR_CODE WSAGetLastError()
+#define CLOSE_SOCKET(s) closesocket(s)
+#endif
 
 // Forward declarations
 class tcpip_protocol;

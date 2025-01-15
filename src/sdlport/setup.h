@@ -7,7 +7,7 @@
  *
  *  This software was released into the Public Domain. As with most public
  *  domain software, no warranty is made or implied by Crack dot Com, by
- *  Jonathan Clark, or by Sam Hocevar.
+ *  Jonathan Clark, by Sam Hocevar, or Andrej Pancik.
  */
 
 #ifndef _SETUP_H_

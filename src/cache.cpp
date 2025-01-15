@@ -29,7 +29,6 @@
 #include "game.h"
 #include "lisp_gc.h"
 #include "level.h"
-#include "status.h"
 #include "crc.h"
 #include "dev.h"
 #include "specache.h"

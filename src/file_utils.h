@@ -1,8 +1,36 @@
 #ifndef FILE_UTILS_H
 #define FILE_UTILS_H
 
-#include <sys/stat.h>
 #include "common.h"
+
+#ifdef WIN32
+#include <io.h>
+#include <fcntl.h>
+typedef unsigned int mode_t;
+
+// Define missing POSIX constants for Windows
+#ifndef O_ACCMODE
+#define O_ACCMODE 0x0003
+#endif
+
+#ifndef O_RDONLY
+#define O_RDONLY 0x0000
+#endif
+
+#ifndef O_WRONLY
+#define O_WRONLY 0x0001
+#endif
+
+#ifndef O_RDWR
+#define O_RDWR 0x0002
+#endif
+
+// Map POSIX open to Windows _open
+#define open _open
+#else
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
 
 void set_filename_prefix(char const *prefix);
 

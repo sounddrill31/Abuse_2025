@@ -125,9 +125,12 @@ include_directories(
 )
 if(WIN32)
     # Under Windows, throw them into the root
-    install(TARGETS abuse abuse-tool
+    install(TARGETS abuse
         RUNTIME DESTINATION "."
         LIBRARY DESTINATION ".")
+    # install(TARGETS abuse-tool
+    #     RUNTIME DESTINATION "."
+    #     LIBRARY DESTINATION ".")
     install(FILES $<TARGET_FILE:SDL2::SDL2> DESTINATION ".")
     install(FILES $<TARGET_FILE:SDL2_mixer::SDL2_mixer> DESTINATION ".")
 else()

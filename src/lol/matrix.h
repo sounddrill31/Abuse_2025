@@ -325,7 +325,19 @@ template <typename T> struct Mat4
 typedef Mat4<float> mat4;
 typedef Mat4<int> imat4;
 
+// Forward declarations for stream operators
+template<typename U>
+std::ostream& operator<<(std::ostream& stream, const Vec2<U>& v);
+
+template<typename U>
+std::ostream& operator<<(std::ostream& stream, const Vec3<U>& v);
+
+template<typename U>
+std::ostream& operator<<(std::ostream& stream, const Vec4<U>& v);
+
+template<typename U>
+std::ostream& operator<<(std::ostream& stream, const Mat4<U>& m);
+
 } /* namespace lol */
 
 #endif // __LOL_MATRIX_H__
-

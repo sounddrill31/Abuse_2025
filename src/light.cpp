@@ -741,7 +741,7 @@ inline int calc_light_value(const light_patch *lp, int32_t sx, int32_t sy)
   }
 
   // Clamp final value to valid range
-  return std::min(light_value, 63);
+  return (light_value > 63) ? 63 : light_value;
 }
 
 void remap_line_asm2(uint8_t *addr, uint8_t *light_lookup, uint8_t *remap_line, int count)

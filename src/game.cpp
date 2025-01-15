@@ -7,7 +7,7 @@
  *
  *  This software was released into the Public Domain. As with most public
  *  domain software, no warranty is made or implied by Crack dot Com, by
- *  Jonathan Clark, or by Sam Hocevar.
+ *  Jonathan Clark, by Sam Hocevar, or Andrej Pancik.
  */
 
 #if defined HAVE_CONFIG_H
@@ -17,7 +17,6 @@
 #include "common.h"
 
 #ifdef WIN32
-# include <WinSock2.h>
 # include <Windows.h>
 // Windows has its own CreateWindow function. It uses preprocessor magic to
 // change between ASCII and wide-character versions, which masks our

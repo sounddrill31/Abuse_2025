@@ -16,21 +16,13 @@
 
 #include "file_utils.h"
 #include "tcpip.h"
-#include <cctype>
-
-#include <ifaddrs.h>
-#include <arpa/inet.h>
-#ifdef WIN32
-#include <iphlpapi.h>
-#pragma comment(lib, "iphlpapi.lib")
-#endif
 
 // Global instances
 static FILE *log_file = nullptr;
 extern int net_start();
 
 // Logging utilities
-static void net_log(const char *st, void *buf, const long size)
+static void net_log(const char *st, const void *buf, const long size)
 {
   if (!log_file)
   {
@@ -42,7 +34,7 @@ static void net_log(const char *st, void *buf, const long size)
   // Print readable characters
   for (int i = 0; i < size; i++)
   {
-    const unsigned char c = *((unsigned char *)buf + i);
+    const unsigned char c = *((const unsigned char *)buf + i);
     fprintf(log_file, "%c", isprint(c) ? c : '~');
   }
 
@@ -131,11 +123,11 @@ int unix_fd::ready_to_write()
 
 int unix_fd::write(void const *buf, int size, net_address *addr)
 {
-  net_log("unix_fd::write:", (char *)buf, size);
+  net_log("unix_fd::write:", static_cast<const char *>(buf), size);
   if (addr)
     DEBUG_LOG("Cannot change address for this socket type\n");
 #ifdef WIN32
-  return send(fd, (char *)buf, size, 0);
+  return send(fd, static_cast<const char *>(buf), size, 0);
 #else
   return ::write(fd, buf, size);
 #endif
@@ -158,7 +150,7 @@ int unix_fd::read(void *buf, int size, net_address **addr)
 void unix_fd::broadcastable() const
 {
   constexpr int option = 1;
-  if (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &option, sizeof(option)) < 0)
+  if (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<const char *>(&option), sizeof(option)) < 0)
   {
     DEBUG_LOG("Could not set socket option broadcast");
   }
@@ -217,20 +209,22 @@ int udp_socket::read(void *buf, const int size, net_address **addr)
   {
     *addr = new ip_address;
     socklen_t addr_size = sizeof(sockaddr_in);
-    return recvfrom(fd, buf, size, 0, (sockaddr *)&((ip_address *)*addr)->addr, &addr_size);
+    return recvfrom(fd, static_cast<char *>(buf), size, 0,
+                    (sockaddr *)&((ip_address *)*addr)->addr, &addr_size);
   }
-  return recv(fd, buf, size, 0);
+  return recv(fd, static_cast<char *>(buf), size, 0);
 }
 
 int udp_socket::write(void const *buf, int size, net_address *addr)
 {
   if (addr)
   {
-    return sendto(fd, buf, size, 0, (sockaddr *)&((ip_address *)addr)->addr,
+    return sendto(fd, static_cast<const char *>(buf), size, 0,
+                  (sockaddr *)&((ip_address *)addr)->addr,
                   sizeof(((ip_address *)addr)->addr));
   }
 #ifdef WIN32
-  return send(fd, (char *)buf, size, 0);
+  return send(fd, static_cast<const char *>(buf), size, 0);
 #else
   return ::write(fd, buf, size);
 #endif
@@ -268,7 +262,7 @@ net_address *tcpip_protocol::get_local_address()
 
   if (my_name[0] < '0' || my_name[0] > '9')
   {
-    const hostent *l_hn = gethostbyname(my_name);
+    hostent *l_hn = gethostbyname(my_name);
     if (l_hn)
     {
       auto *addr = new ip_address;
@@ -400,7 +394,7 @@ net_address *tcpip_protocol::get_node_address(char const *&server_name, int def_
   if (*src == '/')
     src++;
 
-  const hostent *hp = gethostbyname(name);
+  hostent *hp = gethostbyname(name);
   if (!hp)
   {
     DEBUG_LOG("Unable to locate server named '%s'\n", name);
