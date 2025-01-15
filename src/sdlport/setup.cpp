@@ -50,7 +50,6 @@
 
 // AR
 #include <fstream>
-#include <sstream>
 extern Settings settings;
 //
 
@@ -204,11 +203,7 @@ bool Settings::CreateConfigFile()
 
 	fprintf(out, "; Enable high resolution screens and font\n");
 	fprintf(out, "hires=%d\n", hires);
-	fprintf(out, "big_font=%d\n\n", big_font);
-
-	fprintf(out, "; LANGUAGE SETTINGS\n\n");
-	fprintf(out, "; Language selection (default: english)\n");
-	fprintf(out, "language=%s\n\n", this->language.c_str());
+	fprintf(out, "big_font=%d\n\n", big_font);	
 
 	fprintf(out, "; Use linear texture filter (nearest is default)\n");
 	fprintf(out, "linear_filter=%d\n\n", linear_filter);
@@ -244,6 +239,9 @@ bool Settings::CreateConfigFile()
 	fprintf(out, "bullet_time=%d\n\n", (int)(this->bullet_time_add * 100));
 
 	fprintf(out, "local_save=%d\n\n", this->local_save);
+
+	fprintf(out, "; Language selection (default: english)\n");
+	fprintf(out, "language=%s\n\n", this->language.c_str());
 
 	fprintf(out, "; PLAYER CONTROLS\n\n");
 	fprintf(out, "; Key mappings\n");
@@ -602,7 +600,7 @@ void setup(int argc, char **argv)
 
 	const char *prefPath = SDL_GetPrefPath("abuse", "data");
 
-	if (prefPath == NULL)
+	if (prefPath == nullptr)
 	{
 		printf("WARNING: Unable to get save directory path: %s\n", SDL_GetError());
 		printf("         Savegames will use current directory.\n");
@@ -620,19 +618,22 @@ void setup(int argc, char **argv)
 	UInt8 buffer[255];
 	CFURLRef bundleurl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
 	CFURLRef url = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault,
-																											 bundleurl,
-																											 CFSTR("Contents/Resources/data"),
-																											 true);
+														bundleurl,
+														CFSTR("Contents/Resources/data"),
+														true);
 
 	if (!CFURLGetFileSystemRepresentation(url, true, buffer, 255))
 	{
+		CFRelease(url);
+		CFRelease(bundleurl);
 		exit(1);
 	}
-	else
-	{
-		printf("Data path [%s]\n", buffer);
-		set_filename_prefix((const char *)buffer);
-	}
+
+	printf("Data path [%s]\n", (const char *)buffer);
+	set_filename_prefix((const char *)buffer);
+
+	CFRelease(url);
+	CFRelease(bundleurl);
 #elif defined WIN32
 	char assetDirName[MAX_PATH];
 	GetModuleFileName(NULL, assetDirName, MAX_PATH);

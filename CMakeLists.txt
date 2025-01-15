@@ -1,13 +1,13 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.20)
 
-project(abuse C CXX)
-set(abuse_VERSION 2025.1)
-set(abuse_VERSION_MAJOR 2025)
-set(abuse_VERSION_MINOR 1)
-set(abuse_VERSION_PATCH 0)
-set(abuse_VERSION_TWEAK 0)
+project(abuse 
+    VERSION 2025.1.0.0
+    LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+# Add GNUInstallDirs for standard installation directories
+include(GNUInstallDirs)
+
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -22,7 +22,6 @@ if (VCPKG_TARGET_TRIPLET)
     # If using vcpkg, don't specify versions, they're in the manifest
     find_package(SDL2 CONFIG REQUIRED)
     find_package(SDL2_mixer CONFIG REQUIRED)
-
 else()
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
     find_package(SDL2 2.0.0 REQUIRED)
@@ -37,11 +36,8 @@ include(CheckIncludeFiles)
 
 check_include_files(unistd.h HAVE_UNISTD_H)
 check_include_files("sys/time.h" HAVE_SYS_TIME_H)
-check_include_files("sys/ioctl.h" HAVE_SYS_IOCTL_H)
-check_include_files("netinet/in.h" HAVE_NETINET_IN_H)
-check_include_files(bstring.h HAVE_BSTRING_H)
 
-set(HAVE_NETWORK TRUE CACHE BOOL "Enable networking support")
+option(HAVE_NETWORK "Enable networking support" TRUE)
 
 if(TCPIP_DEBUG)
     add_compile_definitions(TCPIP_DEBUG)
@@ -53,19 +49,29 @@ if(WIN32)
     # For Windows, just use whatever CMake wants
     set(ASSETDIR ".")
 elseif(APPLE)
-    # Under macOS, I actually want to redirect this to an app bundle,
-    # which makes things weird.
+    # Under macOS, redirect to an app bundle
     set(ASSETDIR "abuse.app/Contents/Resources/data")
-else()
-    # Under Linux, match the original autotools prefix
-    set(ASSETDIR "./gamedata")
+else()    
+    # Under Linux, use standard installation paths
+    if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        # Standard system installation
+        set(ASSETDIR "${CMAKE_INSTALL_FULL_DATADIR}/games/${PROJECT_NAME}/data")        
+    else()
+        # Local installation
+        set(ASSETDIR "${CMAKE_INSTALL_PREFIX}/data")
+    endif()
     # Only define this for ports that actually use it
-    add_definitions(-DASSETDIR="${ASSETDIR}")
+    add_compile_definitions(ASSETDIR="${ASSETDIR}")
+    
+    message("CMAKE_INSTALL_PREFIX is set to: ${CMAKE_INSTALL_PREFIX}")
+    message("ASSETDIR is set to: ${ASSETDIR}")
 endif()
 
-add_definitions(-DPACKAGE_NAME="abuse")
-add_definitions(-DPACKAGE_VERSION="${abuse_VERSION}")
-add_definitions(-DHAVE_CONFIG_H)
+add_compile_definitions(
+    PACKAGE_NAME="abuse"
+    PACKAGE_VERSION="${abuse_VERSION}"
+    HAVE_CONFIG_H
+)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Packaging
@@ -96,6 +102,11 @@ set(CPACK_WIX_PRODUCT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/doc/icon.ico")
 set(CPACK_WIX_PROGRAM_MENU_FOLDER "Abuse")
 
 include(CPack)
+
+# Modify install location for the executable on Unix systems
+if(UNIX AND NOT APPLE)
+    set(CMAKE_INSTALL_BINDIR "games")
+endif()
 
 add_subdirectory(src)
 add_subdirectory(data)
