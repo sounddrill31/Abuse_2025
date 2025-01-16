@@ -10,6 +10,8 @@ Available as libre software, with source code released under open licenses and g
 
 Abuse 2025 is a modern port of the original game, updated to run on modern systems and with new features like high-resolution graphics, gamepad support, and more. This project is a continuation of the [Xenoveritas SDL2 port](https://github.com/Xenoveritas/abuse) and the [Abuse 1996 project](https://github.com/antrad/Abuse_1996). It aims to be the go-to version for playing Abuse on modern systems.
 
+Currently multiplayer between different platforms and on Windows is not supported.
+
 # Table of Contents
 
 - [Getting Started](#getting-started)  
@@ -34,8 +36,8 @@ Save files and configuration are stored in the user folder, which can override d
 Default paths for user data:
 
 - Windows: `%APPDATA%\abuse`
-- macOS: `~/Library/Application Support/abuse/`
-- Linux: `/usr/local/share/games/abuse`
+- macOS: `~/Library/Application Support/abuse`
+- Linux: `~/.local/share/abuse`
 
 ### Basic Setup
 
@@ -308,7 +310,7 @@ make
 make install
 ```
 
-### Building on Ubuntu/Linux
+### Building on Ubuntu
 
 ```bash
 sudo apt-get install cmake libsdl2-dev libsdl2-mixer-dev

@@ -24,6 +24,7 @@
 
 #include "common.h"
 
+#include "tcpip.h"
 #include "netcfg.h"
 #include "gclient.h"
 #include "netface.h"

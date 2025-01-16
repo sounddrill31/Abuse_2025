@@ -120,25 +120,6 @@ static inline uint32_t lltl(uint32_t x)
 #include <sys/time.h>
 #endif
 
-#ifdef TCPIP_DEBUG
-#define DEBUG_LOG(fmt, ...)                                      \
-    do                                                           \
-    {                                                            \
-        struct timeval tv;                                       \
-        struct tm *tm_info;                                      \
-        char timestr[32];                                        \
-                                                                 \
-        gettimeofday(&tv, NULL);                                 \
-        tm_info = localtime(&tv.tv_sec);                         \
-        strftime(timestr, sizeof(timestr), "%H:%M:%S", tm_info); \
-        printf("[%s.%03d] %s: " fmt "\n",                        \
-               timestr, (int)(tv.tv_usec / 1000),                \
-               __FILE__, ##__VA_ARGS__);                         \
-    } while (0)
-#else
-#define DEBUG_LOG(fmt, ...) ((void)0)
-#endif
-
 #endif
 
 #endif // __COMMON_H__

@@ -24,6 +24,7 @@
 
 #include "common.h"
 
+#include "tcpip.h"
 #include "gserver.h"
 #include "netface.h"
 #include "timing.h"
@@ -285,7 +286,7 @@ int game_server::process_client_command(player_client *c)
     } else {
       DEBUG_LOG("Tick not resent - requested:%d current:%d packet:%d last_packet:%d",
                 tick, base->current_tick, base->packet.tick_received(),
-                base->last_packet.tick_received());      
+                base->last_packet.tick_received());
     }
     return 1;
   }
@@ -459,7 +460,7 @@ int game_server::end_reload(int disconnect)
 {
   DEBUG_LOG("Ending reload (disconnect=%d)", disconnect);
   player_client *c = player_list;
-  prot->select(0);
+  prot->select();
 
   // Check if any clients still haven't reloaded
   for (; c; c = c->next)
@@ -496,7 +497,7 @@ int game_server::start_reload()
   DEBUG_LOG("Starting level reload");
   player_client *c = player_list;
   reload_state = 1;
-  prot->select(0);
+  prot->select();
 
   for (; c; c = c->next)
   {

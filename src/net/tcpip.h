@@ -21,6 +21,31 @@
 #include <iphlpapi.h> // For GetAdaptersAddresses
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
+
+class WinsockInit
+{
+public:
+  WinsockInit()
+  {
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
+      throw std::runtime_error("Failed to initialize Winsock");
+    }
+  }
+
+  ~WinsockInit()
+  {
+    WSACleanup();
+  }
+
+  // Prevent copying
+  WinsockInit(const WinsockInit &) = delete;
+  WinsockInit &operator=(const WinsockInit &) = delete;
+};
+
+static WinsockInit winsock;
+
 #else
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -43,11 +68,23 @@
 #include "sock.h"
 #include "isllist.h"
 
-// Platform-specific type definitions and macros
-#ifdef WIN32
-typedef int socklen_t;
-#define SOCKET_ERROR_CODE WSAGetLastError()
-#define CLOSE_SOCKET(s) closesocket(s)
+#ifdef TCPIP_DEBUG
+#define DEBUG_LOG(fmt, ...)                                  \
+  do                                                         \
+  {                                                          \
+    struct timeval tv;                                       \
+    struct tm *tm_info;                                      \
+    char timestr[32];                                        \
+                                                             \
+    gettimeofday(&tv, NULL);                                 \
+    tm_info = localtime(&tv.tv_sec);                         \
+    strftime(timestr, sizeof(timestr), "%H:%M:%S", tm_info); \
+    printf("[%s.%03d] %s: " fmt "\n",                        \
+           timestr, (int)(tv.tv_usec / 1000),                \
+           __FILE__, ##__VA_ARGS__);                         \
+  } while (0)
+#else
+#define DEBUG_LOG(fmt, ...) ((void)0)
 #endif
 
 // Forward declarations
@@ -119,7 +156,7 @@ public:
 
   // State management
   void cleanup() override;
-  int select(int block) override;
+  int select() override;
 
   // Notification methods
   net_socket *start_notify(int port, void *data, int len) override;
