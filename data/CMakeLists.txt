@@ -217,6 +217,29 @@ INSTALL(FILES
 DESTINATION ${ASSETDIR}/addon/pong)
 
 INSTALL(FILES
+    addon/bgames/chess.spe addon/bgames/connect4.lsp
+    addon/bgames/othello.lsp addon/bgames/chess.lsp
+    addon/bgames/bgames.lsp addon/bgames/checkers.lvl
+    addon/bgames/othello.lvl addon/bgames/connect4.lvl
+    addon/bgames/chess.lvl addon/bgames/checkers.lsp
+    addon/bgames/pong.spe
+DESTINATION ${ASSETDIR}/addon/bgames)
+
+INSTALL(FILES
+    addon/quest/quest.lsp    
+    addon/quest/quest.spe
+    addon/quest/main_map.spe
+DESTINATION ${ASSETDIR}/addon/quest)
+
+INSTALL(FILES
+    addon/diffsens/diffsens.lsp addon/diffsens/diffsens.spe
+DESTINATION ${ASSETDIR}/addon/diffsens)
+
+INSTALL(FILES
+    addon/nextlev2/nextlev2.lsp
+DESTINATION ${ASSETDIR}/addon/nextlev2)
+
+INSTALL(FILES
     addon/twist/art/cgc.spe addon/twist/art/dray.spe addon/twist/art/fire.spe
     addon/twist/art/lavap.spe addon/twist/art/legs.spe
     addon/twist/art/mario.spe addon/twist/art/mtile.spe

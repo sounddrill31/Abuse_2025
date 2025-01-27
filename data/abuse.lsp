@@ -49,6 +49,8 @@
 (load "addon/leon/4frabs.lsp")
 (load "addon/newart/newart.lsp")
 
+(setq mouse_can_switch true) ;; allow mouse to switch weapons
+
 (setq bad_guy_list
   (list DARNEL ANT_ROOF TRACK_GUN SPRAY_GUN JUGGER ROB1 WHO ROCKET FLYER
         GREEN_FLYER BOSS_ANT DROID_JUGGER DROID DEATH_SKULL DEATH_UMBRELLA
