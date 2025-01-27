@@ -42,6 +42,10 @@ option(HAVE_NETWORK "Enable networking support" TRUE)
 if(TCPIP_DEBUG)
     add_compile_definitions(TCPIP_DEBUG)
 endif()
+
+if(NO_CHECK)
+    add_compile_definitions(NO_CHECK)
+endif()
         
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
