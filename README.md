@@ -4,7 +4,7 @@
 
 Celebrating its 30th anniversary, Abuse by Crack dot Com remains a timeless classic. Falsely imprisoned in an underground facility, Nick Vrenna becomes humanity's last hope when a genetic experiment called "Abuse" transforms guards and inmates alike into murderous mutants. As the only person immune to the infection, Nick must fight through hordes of grotesque creatures and security systems gone haywire to prevent the contaminated water supply from reaching the outside world. In this intense 90s action game, one man's quest for freedom becomes a desperate race to save humanity.
 
-Experience revolutionary gameplay combining precision mouse aiming with fluid keyboard movement in this intense side-scrolling action platformer. Play through the whole campaign solo or in co-op, dive into community-created content like [fRaBs](https://github.com/IntinteDAO/fRaBs), create your own challenging levels with the built-in editor, or challenge your friends in action-packed LAN multiplayer deathmatches. With its fast-paced combat and atmospheric pixel art, Abuse delivers non-stop action that holds up to this day.
+Experience revolutionary gameplay combining precision mouse aiming with fluid keyboard movement in this intense side-scrolling action platformer. Play through the whole campaign solo or in co-op, dive into community-created content, create your own challenging levels with the built-in editor, or challenge your friends in action-packed LAN multiplayer deathmatches. With its fast-paced combat and atmospheric pixel art, Abuse delivers non-stop action that holds up to this day.
 
 Available as libre software, with source code released under open licenses and game assets as non-commercial freeware. The original shareware content is public domain, making Abuse one of pioneers in accessible, community-supported gaming.
 
@@ -25,19 +25,27 @@ Currently multiplayer between different platforms and on Windows is not supporte
 
 ### Installation
 
-For now, the game has to be built from source. See the [Development](#development) section for build instructions.
+See the last release available for your platform in the release section. See the [Development](#development) section for build instructions.
 
 ### Data Files
 
-While this repository contains all data files needed to play the game, these assets come from different sources with varying licenses and historical records. My hope is that the educational and non-profit intentions of this repository will enable it to stay hosted and available. If you prefer to use only clearly-licensed content, please replace the included assets with the public domain subset of the original shareware content available from various archives online.
+While this repository contains all data files needed to play the base game, these assets come from different sources with varying licenses and historical records. My hope is that the educational and non-profit intentions of this repository will enable it to stay hosted and available. If you prefer to use only clearly-licensed content, please replace the included assets with the public domain subset of the original shareware content available from various archives online.
 
-Save files and configuration are stored in the user folder, which can override default files in the game folder. This allows adding [custom levels](https://ettingrinder.youfailit.net/abuse-addons.html) or total modifications like [fRaBs](https://github.com/IntinteDAO/fRaBs) without affecting the original game files.
+Save files and configuration are stored in the user folder, which can override default files in the game folder. The game only looks for built-in files if they weren't already found in a the user folder. This allows adding [custom levels](https://dl.pancik.com/abuse/levels/) or [mods](https://dl.pancik.com/abuse/addons/) without affecting the original bundled game files.
 
 Default paths for user data:
 
-- Windows: `%APPDATA%\abuse`
-- macOS: `~/Library/Application Support/abuse`
-- Linux: `~/.local/share/abuse`
+- Windows: `%APPDATA%\abuse\data`
+- macOS: `~/Library/Application Support/abuse/data`
+- Linux: `~/.local/share/abuse/data`
+
+For custom content, there are three types to consider:
+
+| Type | Installation | Launch |
+|------|-------------|--------|
+| Custom Levels | Place level files in the `data/levels` folder | `abuse -f levels/levelname.spe` |
+| Regular Mods | Place mod files in the `data/addon` folder | `abuse -a modname` |
+| Total Conversion Mods | Place directly in the data folder | Launches automatically when starting the game |
 
 ### Basic Setup
 
@@ -51,12 +59,12 @@ For custom content:
 
 ## Configuration
 
-Configuration is stored in `config.txt` in the user folder. It will be created if it doesn't exist at launch. Lines starting with ';' are comments. Use '1' to enable and '0' to disable options.
+Configuration is stored in `config.txt` in the user folder. It will be created if it doesn't exist at launch. Lines starting with `;` are comments. Use `1` to enable and `0` to disable options.
 
 ### Config File Options
 
 #### Display Settings
-- `fullscreen` - Fullscreen mode (0 - window, 1 - fullscreen window, 2 - fullscreen)
+- `fullscreen` - Fullscreen mode (`0` - window, `1` - fullscreen window, `2` - fullscreen)
 - `borderless` - Enable borderless window mode
 - `vsync` - Enable vertical sync
 - `virtual_width` - Internal game resolution width
@@ -64,7 +72,7 @@ Configuration is stored in `config.txt` in the user folder. It will be created i
 - `screen_width` - Game window width 
 - `screen_height` - Game window height
 - `linear_filter` - Use linear texture filter (nearest is default)
-- `hires` - Enable high resolution menu and screens (2 for Bungie logo)
+- `hires` - Enable high resolution menu and screens (`2` for Bungie logo)
 - `big_font` - Enable big font
 
 The game is designed to be played at an internal resolution of 320×200 (`virtual_width`×`virtual_height`). Using a higher resolution may reveal some hidden areas. However, when using the editor, a higher resolution is recommended for better visibility and usability.
@@ -75,14 +83,14 @@ The game is designed to be played at an internal resolution of 320×200 (`virtua
 - `mono` - Use mono audio only
 - `no_music` - Disable music
 - `no_sound` - Disable sound effects
-- `soundfont` - Path to custom soundfont file
+- `soundfont` - Path to custom soundfont file. Custom or bundled `AWE64 Gold Presets.sf2` or `Roland SC-55 Presets.sf2`
 
 #### Game Settings
 - `local_save` - Save config and files locally
 - `grab_input` - Grab mouse to window
 - `editor` - Enable editor mode
 - `physics_update` - Physics update time in ms (65ms/15FPS original)
-- `mouse_scale` - Mouse to game scaling (0 - match desktop, 1 - match game screen)
+- `mouse_scale` - Mouse to game scaling (`0` - match desktop, `1` - match game screen)
 - `bullet_time` - Bullet time effect multiplier (percentage)
 - `language` - Game language (`english`, `german`, `french`)
 
@@ -92,41 +100,61 @@ Default control scheme:
 
 | Action      | Default Binding |
 |-------------|----------------|
-| Left        | Left arrow, A  |
-| Right       | Right arrow, D |
-| Up/Jump     | Up arrow, W    |
-| Down/Use    | Down arrow, S  |
-| Prev Weapon | Left/Right Ctrl|
-| Next Weapon | Insert         |
-| Fire        | Mouse Left     |
-| Special     | Mouse Right    |
+| Left        | <kbd>←</kbd> <kbd>A</kbd>  |
+| Right       | <kbd>→</kbd> <kbd>D</kbd> |
+| Up/Jump     | <kbd>↑</kbd> <kbd>W</kbd>    |
+| Down/Use    | <kbd>↓</kbd> <kbd>S</kbd>  |
+| Prev Weapon | <kbd>Q</kbd>|
+| Next Weapon | <kbd>E</kbd>         |
+| Fire        | <kbd>Mouse Left</kbd>     |
+| Special     | <kbd>Mouse Right</kbd>    |
 
-Special key codes for config file:
-- `LEFT`, `RIGHT`, `UP`, `DOWN` - Cursor keys and keypad
-- `CTRL_L`, `CTRL_R` - Left and right Ctrl
-- `ALT_L`, `ALT_R` - Left and right Alt
-- `SHIFT_L`, `SHIFT_R` - Left and right Shift
-- `F1` - `F10` - Function keys
-- `TAB`, `BACKSPACE`, `ENTER` - Standard keys
-- `INSERT`, `DEL`, `PAGEUP`, `PAGEDOWN` - Navigation keys
-- `CAPS`, `NUM_LOCK` - Lock keys
-- `SPACE` - Spacebar
+Special key codes for config file:  
+- `LEFT`, `RIGHT`, `UP`, `DOWN` - Cursor keys and keypad  
+- `CTRL_L`, `CTRL_R` - Left and right Ctrl  
+- `ALT_L`, `ALT_R` - Left and right Alt  
+- `SHIFT_L`, `SHIFT_R` - Left and right Shift  
+- `F1` - `F10` - Function keys  
+- `TAB`, `BACKSPACE`, `ENTER` - Standard keys  
+- `INSERT`, `DEL`, `PAGEUP`, `PAGEDOWN` - Navigation keys  
+- `CAPS`, `NUM_LOCK` - Lock keys  
+- `SPACE` - Spacebar  
 
-### Controller Support
+Hardcoded Keys:  
+- <kbd>1-7</kbd> - Direct weapon selection  
+- <kbd>Escape/Space/Enter</kbd> - Reset level on death  
+- <kbd>P</kbd> - Pause game  
+- <kbd>C</kbd> - Cheat/chat console  
+- <kbd>F1</kbd> - Show help/controls screen  
+- <kbd>F5</kbd> - Quick save on save consoles (slot 1/"save0001.spe")  
+- <kbd>F6</kbd> - Toggle window input grab  
+- <kbd>F7</kbd> - Toggle mouse scale type  
+- <kbd>F8</kbd> - Toggle gamepad use  
+- <kbd>F9</kbd> - Quick load  
+- <kbd>F10</kbd> - Toggle window/fullscreen mode  
+- <kbd>Print Screen</kbd> - Take a screenshot  
 
-Controller options:
-- `ctr_aim` - Enable right stick aiming
-- `ctr_cd` - Crosshair distance from player
-- `ctr_rst_s` - Right stick/aiming sensitivity
-- `ctr_rst_dz` - Right stick/aiming dead zone
-- `ctr_lst_dzx` - Left stick horizontal dead zone
-- `ctr_lst_dzy` - Left stick vertical dead zone
+Default Controller Bindings:  
+- D-pad, left stick - Move in all directions (game and menus)  
+- Home - Show help/controls screen  
+- Back - Acts as <kbd>Escape</kbd> key  
+- Start - Acts as <kbd>Enter</kbd> key  
 
-Button binding names:
-- `ctr_a`, `ctr_b`, `ctr_x`, `ctr_y` - Face buttons
-- `ctr_left_shoulder`, `ctr_right_shoulder` - Shoulder buttons
-- `ctr_left_trigger`, `ctr_right_trigger` - Triggers
-- `ctr_left_stick`, `ctr_right_stick` - Stick clicks
+### Gamepad Support
+
+Gamepad options:  
+- `ctr_aim` - Enable right stick aiming  
+- `ctr_cd` - Crosshair distance from player  
+- `ctr_rst_s` - Right stick/aiming sensitivity  
+- `ctr_rst_dz` - Right stick/aiming dead zone  
+- `ctr_lst_dzx` - Left stick horizontal dead zone  
+- `ctr_lst_dzy` - Left stick vertical dead zone  
+
+Button binding names:  
+- `ctr_a`, `ctr_b`, `ctr_x`, `ctr_y` - Face buttons  
+- `ctr_left_shoulder`, `ctr_right_shoulder` - Shoulder buttons  
+- `ctr_left_trigger`, `ctr_right_trigger` - Triggers  
+- `ctr_left_stick`, `ctr_right_stick` - Stick clicks  
 
 ### Command Line Arguments
 
@@ -191,61 +219,33 @@ Use the mouse to select the various options.
 | ![newgame](https://github.com/user-attachments/assets/eab3f52b-0eaf-4873-a341-fbb1c9d1e013) | Start New Game | Choose this option when you want to begin a single-player game from the start. You will still be able to access saved positions from previous games. |
 | ![difficulty](https://github.com/user-attachments/assets/81a2bbc1-7850-42a1-8f69-f9a9b918de85) | Difficulty Levels | There are four levels of difficulty in Abuse: WIMP, EASY, NORMAL and EXTREME. The harder the level, the more difficult it is to kill your enemies, and the easier it is for them to kill you. Change the difficulty level by left-clicking on the difficulty box. |
 | ![gamma](https://github.com/user-attachments/assets/cc44dd14-aef6-4034-9f85-2bba8d831805) | Gamma Correction | Abuse is meant to be a dark game. To play the game as it is designed, select the darkest shade of gray that you can discern. It should be one step lighter than black. You may adjust the gamma correction any way you prefer. Save your gamma changes by clicking the red "check" button. |
-| ![sound](https://github.com/user-attachments/assets/3fa76aeb-dce1-45f8-8164-b88d27881b3e) | Volume Control | You can adjust either the sound effects (SFX) or the music by pressing on the arrow buttons (remember that a General MIDI sound card is required to play music). Up arrows increase the volume; down arrows decrease it. Save your volume changes by clicking the button at the upper-left of the Volume Window or pressing `Esc`. |
-| ![networking](https://github.com/user-attachments/assets/076fcc9c-1f84-422a-80c7-0633e88bf532) | Networking | This option takes you to the Network screen. This screen displays all available network games and allows you to create your own game.<br><br>**Join Existing Game:** Select the game you would like to join, then fill out the info blocks. Press `Esc` to return to the Options Screen.<br><br>**Start a New Net Game:** Click the START A NEW NET GAME button, then fill out the info blocks. Press `Esc` to return to the Options Screen.<br><br>**Exit Net Game:** Exits you from your current game so you can join another one. If you're not currently in a game, this option will not appear. |
+| ![sound](https://github.com/user-attachments/assets/3fa76aeb-dce1-45f8-8164-b88d27881b3e) | Volume Control | You can adjust either the sound effects (SFX) or the music by pressing on the arrow buttons (remember that a General MIDI sound card is required to play music). Up arrows increase the volume; down arrows decrease it. Save your volume changes by clicking the button at the upper-left of the Volume Window or pressing <kbd>Esc</kbd>. |
+| ![networking](https://github.com/user-attachments/assets/076fcc9c-1f84-422a-80c7-0633e88bf532) | Networking | This option takes you to the Network screen. This screen displays all available network games and allows you to create your own game.<br><br>**Join Existing Game:** Select the game you would like to join, then fill out the info blocks. Press <kbd>Esc</kbd> to return to the Options Screen.<br><br>**Start a New Net Game:** Click the START A NEW NET GAME button, then fill out the info blocks. Press <kbd>Esc</kbd> to return to the Options Screen.<br><br>**Exit Net Game:** Exits you from your current game so you can join another one. If you're not currently in a game, this option will not appear. |
 | ![quit](https://github.com/user-attachments/assets/cfcf7b31-961a-44cb-a03d-5b6775d256f6) | Quit Abuse | Exit the game and return to either your DOS prompt or Windows '95. |
 
 ### Controls
 
 ![controls](https://github.com/user-attachments/assets/e92a2f53-a790-4b54-9db7-13e20e26b54b)
 
-To better reflect modern game controls, the original arrow key controls have been replaced with WASD for movement. Mouse controls aim, left button shoots, right button activates special powers, and mouse scroll switches between weapons.​​​​​​​​​​​​​​​​
+To better reflect modern game controls, the original arrow key controls have been replaced with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> for movement. Mouse controls aim, left button shoots, right button activates special powers, and mouse scroll switches between weapons.​​​​​​​​​​​​​​​​
 
 **Falls**. Jumping off a ledge is the fastest way down. Falls never do any damage at all.
-
-#### Hardcoded Keys
-These keys cannot be remapped:
-
-Game Controls:
-- `1-7` - Direct weapon selection
-- `Right Control` - Previous weapon
-- `Insert` - Next weapon
-- `Numpad 2,4,5,6,8` - Player movement
-- `Escape/Space/Enter` - Reset level on death
-- `P` - Pause game
-- `C` - Cheat/chat console
-
-Function Keys:
-- `F1` - Show help/controls screen
-- `F5` - Quick save on save consoles (slot 1/"save0001.spe")
-- `F6` - Toggle window input grab
-- `F7` - Toggle mouse scale type
-- `F8` - Toggle controller use
-- `F9` - Quick load
-- `F10` - Toggle window/fullscreen mode
-- `Print Screen` - Take a screenshot
-
-Default Controller Bindings:
-- D-pad, left stick - Move in all directions (game and menus)
-- Home - Show help/controls screen
-- Back - Acts as Escape key
-- Start - Acts as Enter key
 
 ### Environment
 | Feature               | Description                                                                                                                                      |
 |---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Health                | These restore hit points.                                                                                                                          |
-| Stations              | Stations are places where you can save games. Stand in front of the station and press `↓`.                                                         |
+| Stations              | Stations are places where you can save games. Stand in front of the station and press <kbd>S</kbd>.                                                         |
 |                           | - To save your position, click on any of the numbered save buttons on the left. A small image of the current screen will appear in the save area.   |
-|                           | - To leave without saving your position, press `Esc`.                                                                                              |
-| Switches & Doors      | To activate a switch, press `↓`. Sometimes, you'll need to use more than one switch to remove an obstacle.                                          |
-| Moving Platforms      | Press `↓` to activate a moving platform. If you use either `←` or `→`, you'll step off the platform.                                                |
+|                           | - To leave without saving your position, press <kbd>Esc</kbd>.                                                                                              |
+| Switches & Doors      | To activate a switch, press <kbd>S</kbd>. Sometimes, you'll need to use more than one switch to remove an obstacle.                                          |
+| Moving Platforms      | Press <kbd>S</kbd> to activate a moving platform. If you use either <kbd>A</kbd> or <kbd>D</kbd>, you'll step off the platform.                                                |
 | Jump Enhancers        | Jump toward a jump enhancer; when you hit it for the first time, your momentum temporarily increases. An enhancer needs to recharge briefly.        |
 | Destroyable Walls     | Some walls will crumble and reveal secret rooms. Weak walls show cracks or signs of damage, but not always.                                         |
 |                           | - When hit, the weapon's fire will terminate with a red glow.                                                                                       |
 |                           | - A solid wall hit terminates with a white glow.                                                                                                   |
-| Map View              | Only available in network play. Press `M` to toggle the map view on and off.                                                                       |
-| Teleporter            | There are two types of teleporters: local and level. Press `↓` to use both.                                                                        |
+| Map View              | Only available in network play. Press <kbd>M</kbd> to toggle the map view on and off.                                                                       |
+| Teleporter            | There are two types of teleporters: local and level. Press <kbd>S</kbd> to use both.                                                                        |
 | Local teleporters     | Send you to a different area of the same level.                                                                                                    |
 | Level exit teleporters| Send you to a new level.                                                                                                                           |
 | Compass               | Only available in network play. When acquired, the map view shows the locations of all the non-cloaked players.                                    |
@@ -270,7 +270,7 @@ Default Controller Bindings:
 
 ### Cheats
 
-To use cheats, press `c` to open the console and type the desired cheat command. The mouse cursor must be inside the console window for input. Press enter when done, or type "quit"/"exit" to close the console.
+To use cheats, press <kbd>c</kbd> to open the console and type the desired cheat command. The mouse cursor must be inside the console window for input. Press enter when done, or type "quit"/"exit" to close the console.
 
 Available cheats:
 
@@ -313,7 +313,7 @@ make install
 ### Building on Ubuntu
 
 ```bash
-sudo apt-get install cmake libsdl2-dev libsdl2-mixer-dev
+sudo apt-get install build-essential cmake libsdl2-dev libsdl2-mixer-dev
 ```
 
 ```bash
@@ -335,28 +335,26 @@ make install
 ## Resources
 
 ### Game Information
-[Moby Games page] (http://www.mobygames.com/game/abuse)  
-[Abuse homepage] (http://web.archive.org/web/20010517011228/http://abuse2.com)  
-[Free Abuse(Frabs) homepage] (http://web.archive.org/web/20010124070000/http://www.cs.uidaho.edu/~cass0664/fRaBs)  
-[Abuse fan page] (http://web.archive.org/web/19970701080256/http://games.3dreview.com/abuse/index.html)  
+[Moby Games page](http://www.mobygames.com/game/abuse)  
+[Abuse homepage](http://web.archive.org/web/20010517011228/http://abuse2.com)  
+[Free Abuse (fRaBs) homepage](http://web.archive.org/web/20010124070000/http://www.cs.uidaho.edu/~cass0664/fRaBs)  
+[Abuse fan page](http://web.archive.org/web/19970701080256/http://games.3dreview.com/abuse/index.html)  
 
 ### Downloads
-[Abuse Desura download] (http://www.desura.com/games/abuse/download)  
-[Free Abuse(Frabs) download] (http://www.dosgames.com/g_act.php)
-[ETTiNGRiNDER's Fortress] (https://ettingrinder.youfailit.net/abuse-main.html)
-
+[ETTiNGRiNDER's Fortress](https://ettingrinder.youfailit.net/abuse-main.html)  
+[Assorted Abuse Files](https://dl.pancik.com/abuse/)
 
 ### Source code releases
-[Original source code] (https://archive.org/details/abuse_sourcecode)  
-[Anthony Kruize Abuse SDL port (2001)] (http://web.archive.org/web/20070205093016/http://www.labyrinth.net.au/~trandor/abuse)  
-[Jeremy Scott Windows port (2001)] (http://web.archive.org/web/20051023123223/http://www.webpages.uidaho.edu/~scot4875)  
-[Sam Hocevar Abuse SDl port (2011)] (http://abuse.zoy.org)  
-[Xenoveritas SDL2 port (2014)] (http://github.com/Xenoveritas/abuse)  
-[Antonio Radojkovic Abuse 1996] (https://github.com/antrad/Abuse_1996)
+[Original source code](https://archive.org/details/abuse_sourcecode)  
+[Anthony Kruize Abuse SDL port (2001)](http://web.archive.org/web/20070205093016/http://www.labyrinth.net.au/~trandor/abuse)  
+[Jeremy Scott Windows port (2001)](http://web.archive.org/web/20051023123223/http://www.webpages.uidaho.edu/~scot4875)  
+[Sam Hocevar Abuse SDl port (2011)](http://abuse.zoy.org)  
+[Xenoveritas SDL2 port (2014)](http://github.com/Xenoveritas/abuse)  
+[Antonio Radojkovic Abuse 1996](https://github.com/antrad/Abuse_1996)
 
 ### Bonus
-[Gameplay video] (http://www.youtube.com/watch?v=0Q0SbdDfnFI)  
-[HMI to MIDI converter] (http://www.ttdpatch.net/midi/games.html)
+[Gameplay video](http://www.youtube.com/watch?v=0Q0SbdDfnFI)  
+[HMI to MIDI converter](http://www.ttdpatch.net/midi/games.html)
 
 ## Acknowledgments
 
