@@ -16,6 +16,10 @@
 
 #include "common.h"
 
+#ifdef __EMSCRIPTEN__
+# include <emscripten.h>
+#endif
+
 #ifdef WIN32
 # include <Windows.h>
 // Windows has its own CreateWindow function. It uses preprocessor magic to

@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
+option(EMSCRIPTEN "EMSCRIPTEN" OFF)
 
 project(abuse 
     VERSION 2025.1.0.0
@@ -18,18 +19,32 @@ if (WIN32)
     enable_language(RC)
 endif()
 
-if (VCPKG_TARGET_TRIPLET)
-    # If using vcpkg, don't specify versions, they're in the manifest
+if (EMSCRIPTEN)
+    set(FORCE_EXCEPTION_FLAG "-fwasm-exceptions")
+else()
+    set(FORCE_EXCEPTION_FLAG "")
+endif()
+
+if(EMSCRIPTEN)
+    # Enable SDL2 and SDL2_mixer via builtin ports
+    add_compile_options(
+        "SHELL:-sUSE_SDL=2"
+        "SHELL:-sUSE_SDL_MIXER=2"
+        "SHELL:-sSDL2_MIXER_FORMATS=['ogg','wav','mod']"
+    )
+    add_link_options(
+        "SHELL:-sUSE_SDL=2"
+        "SHELL:-sUSE_SDL_MIXER=2"
+        "SHELL:-sSDL2_MIXER_FORMATS=['ogg','wav','mod']"
+    )
+    message(STATUS "Using Emscripten built-in SDL2/SDL2_mixer ports")
+elseif(VCPKG_TARGET_TRIPLET)
     find_package(SDL2 CONFIG REQUIRED)
     find_package(SDL2_mixer CONFIG REQUIRED)
+    target_link_libraries(sdlport PRIVATE SDL2::SDL2 SDL2_mixer::SDL2_mixer)
 else()
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-    find_package(SDL2 2.0.0 REQUIRED)
-    find_package(SDL2_mixer 2.0.0 REQUIRED)
-    # For compatibility with vcpkg, configure SDL2_mixer as an imported shared library
-    add_library(SDL2_mixer::SDL2_mixer SHARED IMPORTED)
-    set_property(TARGET SDL2_mixer::SDL2_mixer PROPERTY IMPORTED_LOCATION "${SDL2_MIXER_LIBRARY}")
-    set_property(TARGET SDL2_mixer::SDL2_mixer PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${SDL2_MIXER_INCLUDE_DIRS}")
+    find_package(SDL2 REQUIRED)
+    find_package(SDL2_mixer REQUIRED)
 endif()
 
 include(CheckIncludeFiles)
