@@ -18,6 +18,11 @@ else()
     set(abuse_RESOURCE_FILES "")
 endif()
 
+if (EMSCRIPTEN)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/output")
+set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif()
+
 add_executable(abuse
     common.h
     file_utils.cpp file_utils.h
